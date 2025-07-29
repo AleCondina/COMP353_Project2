@@ -12,9 +12,9 @@ $stmt->close();
 
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
-    $stmt = $conn->prepare("UPDATE Personnel SET firstName=?, lastName=?, dateOfBirth=?, medicareNumber=?, phoneNumber=?, address=?, city=?, province=?, postalCode=?, email=?, role=?, mandate=? WHERE personnelID=?");
-    $stmt->bind_param("ssssssssssssi",
-        $_POST['firstName'], $_POST['lastName'], $_POST['dateOfBirth'], $_POST['medicareNumber'], $_POST['phoneNumber'],
+    $stmt = $conn->prepare("UPDATE Personnel SET firstName=?, lastName=?, gender=?, dateOfBirth=?, medicareNumber=?, phoneNumber=?, address=?, city=?, province=?, postalCode=?, email=?, role=?, mandate=? WHERE personnelID=?");
+    $stmt->bind_param("sssssssssssssi",
+        $_POST['firstName'], $_POST['lastName'], $_POST['gender'], $_POST['dateOfBirth'], $_POST['medicareNumber'], $_POST['phoneNumber'],
         $_POST['address'], $_POST['city'], $_POST['province'], $_POST['postalCode'], $_POST['email'],
         $_POST['role'], $_POST['mandate'], $id
     );
@@ -37,6 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
         <p>SSN: <?= htmlspecialchars($person['SSN']) ?></p>
         <input name="firstName" value="<?= htmlspecialchars($person['firstName']) ?>" required><br>
         <input name="lastName" value="<?= htmlspecialchars($person['lastName']) ?>" required><br>
+        <label for="gender">Gender:</label>
+        <select name="gender" required>
+            <option value="Not Assigned" <?= (isset($gender) && $gender === 'Not Assigned') ? 'selected' : '' ?>>Not Assigned</option>
+            <option value="Male" <?= (isset($gender) && $gender === 'Male') ? 'selected' : '' ?>>Male</option>
+            <option value="Female" <?= (isset($gender) && $gender === 'Female') ? 'selected' : '' ?>>Female</option>
+        </select>
         <input name="dateOfBirth" type="date" value="<?= $person['dateOfBirth'] ?>" required><br>
         <input name="medicareNumber" value="<?= htmlspecialchars($person['medicareNumber']) ?>"><br>
         <input name="phoneNumber" value="<?= htmlspecialchars($person['phoneNumber']) ?>"><br>

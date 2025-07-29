@@ -14,6 +14,18 @@
         <li><a href="TeamFormation.php">Manage Team Formations</a></li>
         <li><a href="formation_players.php">Assign Club Members to Teams</a></li>
         <li><a href="MakesPayment.php">Make a Payment</a></li>
+        <li><a href="Q8.php">Q8. Location Details</a></li>
+        <li><a href="Q9.php">Q9. Family Details</a></li>
+        <li><a href="Q10.php">Q10. Team Formations</a></li>
+        <li><a href="Q11.php">Q11. Inactive Members</a></li>
+        <li><a href="Q12.php">Q12. Team Formations Aross Locations</a></li>
+        <li><a href="Q13.php">Q13. Active Member Formations</a></li>
+        <li><a href="Q14.php">Q14. Major members since minors</a></li>
+        <li><a href="Q15.php">Q15. Goalkeepers</a></li>
+        <li><a href=""></a></li>
+        <li><a href=""></a></li>
+        <li><a href=""></a></li>
+        <li><a href=""></a></li>
     </ul>
 </body>
 </html>

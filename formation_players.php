@@ -1,130 +1,102 @@
 <?php
-include 'db.php';
+require_once 'db.php';
 
-// Assign a player
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign'])) {
-    $formationID = $_POST['formationID'];
-    $clubMemberID = $_POST['clubMemberID'];
-    $role = $_POST['role'];
-
-    // Get the date of the current formation
-    $stmt = $conn->prepare("SELECT date FROM TeamFormation WHERE formationID = ?");
-    $stmt->bind_param("i", $formationID);
-    $stmt->execute();
-    $stmt->bind_result($formationDate);
-    $stmt->fetch();
-    $stmt->close();
-
-    // Check for conflicting assignment on the same day
-    $stmt = $conn->prepare("
-        SELECT fp.formationID
-        FROM FormationPlayers fp
-        JOIN TeamFormation tf ON fp.formationID = tf.formationID
-        WHERE fp.clubMemberID = ? AND tf.date = ? AND fp.formationID != ?
-    ");
-    $stmt->bind_param("isi", $clubMemberID, $formationDate, $formationID);
-    $stmt->execute();
-    $stmt->store_result();
-
-    if ($stmt->num_rows > 0) {
-        $error = "This club member is already assigned to another formation on the same day.";
-    } else {
-        // Insert assignment
-        $stmt = $conn->prepare("INSERT INTO FormationPlayers (formationID, clubMemberID, role) VALUES (?, ?, ?)");
-        $stmt->bind_param("iis", $formationID, $clubMemberID, $role);
-        $stmt->execute();
-    }
-    $stmt->close();
-    header("Location: formation_players.php");
-    exit;
-}
-
-// Delete a player from formation
-if (isset($_GET['deleteFormationID']) && isset($_GET['deleteClubMemberID'])) {
-    $stmt = $conn->prepare("DELETE FROM FormationPlayers WHERE formationID = ? AND clubMemberID = ?");
-    $stmt->bind_param("ii", $_GET['deleteFormationID'], $_GET['deleteClubMemberID']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: formation_players.php");
-    exit;
-}
-
-// Fetch all formations and club members
 $formations = $conn->query("
     SELECT 
         tf.formationID, 
         tf.date, 
         tf.startTime, 
         ta.name AS teamAName, 
-        tb.name AS teamBName
+        ta.gender AS genderA,
+        tb.name AS teamBName, 
+        tb.gender AS genderB
     FROM TeamFormation tf
     JOIN Team ta ON tf.team1ID = ta.teamID
     JOIN Team tb ON tf.team2ID = tb.teamID
     ORDER BY tf.date DESC, tf.startTime DESC
 ");
-$clubMembers = $conn->query("SELECT clubMemberID, firstName, lastName FROM ClubMember");
 
-$teams = $conn->query("SELECT teamID, name FROM Team");
-
-
-// Fetch current assignments
-$assignments = $conn->query("
-    SELECT fp.*, cm.firstName, cm.lastName, tf.date 
-    FROM FormationPlayers fp
-    JOIN ClubMember cm ON fp.clubMemberID = cm.clubMemberID
-    JOIN TeamFormation tf ON fp.formationID = tf.formationID
-    ORDER BY tf.date DESC
+$teams = $conn->query("
+    SELECT t.teamID, t.name, l.name AS locationName
+    FROM Team t
+    JOIN TeamLocated tl ON t.teamID = tl.teamID
+    JOIN Location l ON tl.locationID = l.locationID
 ");
+
+$clubMembers = $conn->query("
+    SELECT cm.clubMemberID, cm.firstName, cm.lastName, cm.gender, l.name AS locationName
+    FROM ClubMember cm
+    JOIN EnrolledAt ea ON cm.clubMemberID = ea.clubMemberID
+    JOIN Location l ON ea.locationID = l.locationID
+");
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $formationID = $_POST['formationID'];
+    $teamID = $_POST['teamID'];
+    $clubMemberID = $_POST['clubMemberID'];
+    $role = $_POST['role'];
+
+    // Check for conflicts
+    $conflictCheck = $conn->prepare("
+        SELECT 1 FROM FormationPlayers fp 
+        JOIN TeamFormation tf ON fp.formationID = tf.formationID
+        WHERE fp.clubMemberID = ? AND tf.date = (
+            SELECT date FROM TeamFormation WHERE formationID = ?
+        ) AND ABS(TIMESTAMPDIFF(HOUR, tf.startTime, (SELECT startTime FROM TeamFormation WHERE formationID = ?))) < 3
+    ");
+    $conflictCheck->bind_param("iii", $clubMemberID, $formationID, $formationID);
+    $conflictCheck->execute();
+    $conflictResult = $conflictCheck->get_result();
+
+    if ($conflictResult->num_rows === 0) {
+        $stmt = $conn->prepare("INSERT INTO FormationPlayers (formationID, teamID, clubMemberID, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("iiis", $formationID, $teamID, $clubMemberID, $role);
+        $stmt->execute();
+        $stmt->close();
+        echo "<p style='color:green;'>Club member assigned successfully.</p>";
+    } else {
+        echo "<p style='color:red;'>Conflict detected: member is already in another formation within 3 hours on the same day.</p>";
+    }
+
+    $conflictCheck->close();
+}
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Assign Club Members to Formations</title>
-</head>
-<body>
-<h2>Assign Club Member to Formation</h2>
-<?php if (!empty($error)): ?>
-    <p style="color:red"><?= htmlspecialchars($error) ?></p>
-<?php endif; ?>
+<h2>Assign Club Member to Team Formation</h2>
+
 <form method="POST">
-    <input type="hidden" name="assign" value="1">
-
-    <label>Formation:</label>
-    <select name="formationID" id="formationID" required onchange="fetchTeams(this.value)">
-        <option value="">Select...</option>
-       <?php while ($row = $formations->fetch_assoc()): ?>
-    <option value="<?= $row['formationID'] ?>">
-        <?= htmlspecialchars($row['teamAName']) ?> vs <?= htmlspecialchars($row['teamBName']) ?> — <?= $row['date'] ?> <?= $row['startTime'] ?>
-    </option>
-    <?php endwhile; ?>  
-
+    <label for="formationID">Formation:</label>
+    <select name="formationID" required>
+        <option value="">Select Formation</option>
+        <?php while ($row = $formations->fetch_assoc()): ?>
+            <option value="<?= $row['formationID'] ?>">
+                <?= htmlspecialchars($row['teamAName']) ?> (<?= $row['genderA'] ?>) vs <?= htmlspecialchars($row['teamBName']) ?> (<?= $row['genderB'] ?>) — <?= $row['date'] ?> <?= $row['startTime'] ?>
+            </option>
+        <?php endwhile; ?>
     </select><br><br>
 
-    <label>Team:</label>
+    <label for="teamID">Team:</label>
     <select name="teamID" required>
-        <option value="">Select...</option>
-        <?php
-        $teams->data_seek(0);
-        while ($row = $teams->fetch_assoc()): ?>
-            <option value="<?= $row['teamID'] ?>"><?= htmlspecialchars($row['name']) ?></option>
+        <option value="">Select Team</option>
+        <?php while ($row = $teams->fetch_assoc()): ?>
+            <option value="<?= $row['teamID'] ?>">
+                <?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['locationName']) ?>)
+            </option>
         <?php endwhile; ?>
     </select><br><br>
 
-
-    <label>Club Member:</label>
+    <label for="clubMemberID">Club Member:</label>
     <select name="clubMemberID" required>
-        <option value="">Select...</option>
-        <?php
-        $clubMembers->data_seek(0); // Reset result pointer
-        while ($row = $clubMembers->fetch_assoc()): ?>
-            <option value="<?= $row['clubMemberID'] ?>"><?= htmlspecialchars($row['firstName'] . " " . $row['lastName']) ?></option>
+        <option value="">Select Member</option>
+        <?php while ($row = $clubMembers->fetch_assoc()): ?>
+            <option value="<?= $row['clubMemberID'] ?>">
+                <?= htmlspecialchars($row['firstName'] . " " . $row['lastName']) ?> (<?= $row['gender'] ?>, <?= htmlspecialchars($row['locationName']) ?>)
+            </option>
         <?php endwhile; ?>
     </select><br><br>
-
-    <label>Role:</label>
+    <label for="role">Role:</label>
     <select name="role" required>
-        <option value="">Select...</option>
+        <option value="">Select Role</option>
         <option value="Goalkeeper">Goalkeeper</option>
         <option value="Defender">Defender</option>
         <option value="Midfielder">Midfielder</option>
@@ -134,30 +106,3 @@ $assignments = $conn->query("
 
     <button type="submit">Assign</button>
 </form>
-
-
-<h2>Current Assignments</h2>
-<table border="1">
-    <tr>
-        <th>Formation ID</th>
-        <th>Date</th>
-        <th>Club Member</th>
-        <th>Role</th>
-        <th>Actions</th>
-    </tr>
-    <?php while ($row = $assignments->fetch_assoc()): ?>
-    <tr>
-        <td><?= $row['formationID'] ?></td>
-        <td><?= $row['date'] ?></td>
-        <td><?= htmlspecialchars($row['firstName'] . " " . $row['lastName']) ?></td>
-        <td><?= $row['role'] ?></td>
-        <td>
-            <a href="?deleteFormationID=<?= $row['formationID'] ?>&deleteClubMemberID=<?= $row['clubMemberID'] ?>" onclick="return confirm('Delete this assignment?')">Delete</a>
-        </td>
-    </tr>
-    <?php endwhile; ?>
-</table>
-</body>
-</html>
-
-

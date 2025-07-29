@@ -15,11 +15,11 @@ if (isset($_GET['delete'])) {
 // Handle creation
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt = $conn->prepare("INSERT INTO ClubMember 
-        (firstName, lastName, dateOfBirth, height, weight, SSN, medicareNumber, phoneNumber, address, city, province, postalCode, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        (firstName, lastName, dateOfBirth, height, weight, SSN, medicareNumber, phoneNumber, address, city, province, postalCode, status, gender)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-        "sssddssssssss",
+        "sssddsssssssss",
         $_POST['firstName'],
         $_POST['lastName'],
         $_POST['dateOfBirth'],
@@ -32,7 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $_POST['city'],
         $_POST['province'],
         $_POST['postalCode'],
-        $_POST['status']
+        $_POST['status'], 
+        $_POST['gender']
     );
 
     $stmt->execute();
@@ -50,6 +51,14 @@ $result = $conn->query("SELECT * FROM ClubMember");
 <form method="POST">
     <input type="text" name="firstName" placeholder="First Name" required>
     <input type="text" name="lastName" placeholder="Last Name" required>
+
+    <label for="gender">Gender:</label>
+    <select name="gender" required>
+        <option value="Not Assigned" <?= (isset($gender) && $gender === 'Not Assigned') ? 'selected' : '' ?>>Not Assigned</option>
+        <option value="Male" <?= (isset($gender) && $gender === 'Male') ? 'selected' : '' ?>>Male</option>
+        <option value="Female" <?= (isset($gender) && $gender === 'Female') ? 'selected' : '' ?>>Female</option>
+    </select>
+
     <input type="date" name="dateOfBirth" required>
     <input type="number" step="0.01" name="height" placeholder="Height (cm)">
     <input type="number" step="0.01" name="weight" placeholder="Weight (kg)">
@@ -60,18 +69,21 @@ $result = $conn->query("SELECT * FROM ClubMember");
     <input type="text" name="city" placeholder="City">
     <input type="text" name="province" placeholder="Province">
     <input type="text" name="postalCode" placeholder="Postal Code">
+    
     <select name="status" required>
         <option value="Active">Active</option>
         <option value="Inactive" selected>Inactive</option>
     </select>
+
     <button type="submit">Add Club Member</button>
 </form>
+
 
 <table border="1" cellpadding="6" cellspacing="0">
     <tr>
         <th>ID</th><th>First</th><th>Last</th><th>DOB</th><th>Height</th><th>Weight</th>
         <th>SSN</th><th>Medicare</th><th>Phone</th><th>Address</th><th>City</th>
-        <th>Province</th><th>Postal Code</th><th>Status</th><th>Actions</th>
+        <th>Province</th><th>Postal Code</th><th>Gender</th><th>Status</th><th>Actions</th>
     </tr>
     <?php while ($row = $result->fetch_assoc()): ?>
     <tr>
@@ -88,6 +100,7 @@ $result = $conn->query("SELECT * FROM ClubMember");
         <td><?= htmlspecialchars($row['city']) ?></td>
         <td><?= htmlspecialchars($row['province']) ?></td>
         <td><?= htmlspecialchars($row['postalCode']) ?></td>
+        <td><?= htmlspecialchars($row['gender']) ?></td>
         <td><?= htmlspecialchars($row['status']) ?></td>
         <td>
             <a href="clubMember_edit.php?id=<?= $row['clubMemberID'] ?>">Edit</a>

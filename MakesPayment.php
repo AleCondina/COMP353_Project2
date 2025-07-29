@@ -5,10 +5,11 @@ include 'db.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
     $clubMemberID = $_POST['clubMemberID'];
     $amount = $_POST['amount'];
+    $forYear = $_POST['forYear'];
 
     // Insert into Payment table
-    $stmt = $conn->prepare("INSERT INTO Payment (amount, paymentDate) VALUES (?, NOW())");
-    $stmt->bind_param("d", $amount);
+    $stmt = $conn->prepare("INSERT INTO Payment (amount, paymentDate, forYear) VALUES (?, NOW(), ?)");
+    $stmt->bind_param("di", $amount, $forYear);
     $stmt->execute();
     $paymentID = $conn->insert_id; // get last inserted payment ID
     $stmt->close();
@@ -24,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
 }
 
 // Fetch all MakesPayment records
-$result = $conn->query("SELECT mp.clubMemberID, mp.paymentID, cm.firstName, cm.lastName, p.amount, p.paymentDate 
+$result = $conn->query("SELECT mp.clubMemberID, mp.paymentID, cm.firstName, cm.lastName, p.amount, p.paymentDate, p.forYear 
                         FROM MakesPayment mp
                         JOIN ClubMember cm ON mp.clubMemberID = cm.clubMemberID
                         JOIN Payment p ON mp.paymentID = p.paymentID");
@@ -54,8 +55,11 @@ $members = $conn->query("SELECT clubMemberID, firstName, lastName FROM ClubMembe
             <?php endwhile; ?>
         </select><br><br>
 
-        <label>Payment Amount:</label>
+        <label>Payment Amount ($):</label>
         <input type="number" name="amount" step="0.01" min="0.01" required><br><br>
+
+        <label>Membership Year:</label>
+        <input type="number" name="forYear" value="<?= date('Y') ?>" min="2000" required><br><br>
 
         <button type="submit">Make Payment</button>
     </form>
@@ -63,13 +67,18 @@ $members = $conn->query("SELECT clubMemberID, firstName, lastName FROM ClubMembe
     <h1>All Payments</h1>
     <table border="1">
         <tr>
-            <th>Club Member</th><th>Payment ID</th><th>Amount</th><th>Date</th>
+            <th>Club Member</th>
+            <th>Payment ID</th>
+            <th>Amount</th>
+            <th>For Year</th>
+            <th>Date Paid</th>
         </tr>
         <?php while ($row = $result->fetch_assoc()): ?>
         <tr>
             <td><?= htmlspecialchars($row['firstName'] . ' ' . $row['lastName']) ?> (ID: <?= $row['clubMemberID'] ?>)</td>
             <td><?= $row['paymentID'] ?></td>
-            <td>$<?= $row['amount'] ?></td>
+            <td>$<?= number_format($row['amount'], 2) ?></td>
+            <td><?= $row['forYear'] ?></td>
             <td><?= $row['paymentDate'] ?></td>
         </tr>
         <?php endwhile; ?>
