@@ -7,7 +7,6 @@ etc.) of every player in the team. Results should be displayed sorted in ascendi
 by the start time of the session. For example, the period of time could be from Jan 1st
 ,
 2025, to May 31st, 2025. -->
-
 <?php
 include 'db.php';
 
@@ -20,7 +19,7 @@ function fetchLocations($conn) {
     return $locations;
 }
 
-$formations = [];
+$matchups = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['startDate'], $_POST['endDate'])) {
     $locationID = $_POST['locationID'];
     $startDate = $_POST['startDate'];
@@ -28,31 +27,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
 
     $query = "
         SELECT
-            TF.formationID,
-            TF.date,
-            TF.startTime,
-            TF.sessionType,
-            TF.team1Score,
-            TF.team2Score,
+            TMU.formationID,
+            TMU.date,
+            TMU.startTime,
+            TMU.sessionType,
+            TMU.team1Score,
+            TMU.team2Score,
             L.name AS locationName,
             L.address AS locationAddress,
             T1.teamID AS team1ID,
             T1.name AS team1Name,
             T2.teamID AS team2ID,
             T2.name AS team2Name,
-            FP.teamID AS playerTeamID,
-            FP.role,
+            RI.teamID AS playerTeamID,
+            RI.role,
             CM.clubMemberID,
             CM.firstName,
             CM.lastName
-        FROM TeamFormation TF
-        JOIN Location L ON TF.locationID = L.locationID
-        JOIN Team T1 ON TF.team1ID = T1.teamID
-        JOIN Team T2 ON TF.team2ID = T2.teamID
-        LEFT JOIN FormationPlayers FP ON TF.formationID = FP.formationID
-        LEFT JOIN ClubMember CM ON FP.clubMemberID = CM.clubMemberID
-        WHERE TF.locationID = ? AND TF.date BETWEEN ? AND ?
-        ORDER BY TF.date, TF.startTime, TF.formationID, FP.teamID
+        FROM TeamMatchUp TMU
+        JOIN Location L  ON TMU.locationID = L.locationID
+        JOIN Team T1 ON TMU.team1ID = T1.teamID
+        JOIN Team T2 ON TMU.team2ID = T2.teamID
+        LEFT JOIN RoleIn RI ON RI.teamID IN (T1.teamID, T2.teamID)
+        LEFT JOIN ClubMember CM ON RI.clubMemberID = CM.clubMemberID
+        WHERE TMU.locationID = ? AND TMU.date BETWEEN ? AND ?
+        ORDER BY TMU.date, TMU.startTime, TMU.formationID, RI.teamID
     ";
 
     $stmt = $conn->prepare($query);
@@ -63,8 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
     while ($row = $result->fetch_assoc()) {
         $fid = $row['formationID'];
 
-        if (!isset($formations[$fid])) {
-            $formations[$fid] = [
+        if (!isset($matchups[$fid])) {
+            $matchups[$fid] = [
                 'date' => $row['date'],
                 'startTime' => $row['startTime'],
                 'sessionType' => $row['sessionType'],
@@ -77,9 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
                 'teams' => []
             ];
 
-            // Ensure both teams exist even if they have no players
             foreach ([$row['team1ID'], $row['team2ID']] as $tid) {
-                $formations[$fid]['teams'][$tid] = [
+                $matchups[$fid]['teams'][$tid] = [
                     'players' => [],
                     'headCoach' => null
                 ];
@@ -89,9 +87,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
         if ($row['playerTeamID']) {
             $tid = $row['playerTeamID'];
             if ($row['role'] === 'Head Coach') {
-                $formations[$fid]['teams'][$tid]['headCoach'] = $row['firstName'] . ' ' . $row['lastName'];
+                $matchups[$fid]['teams'][$tid]['headCoach'] = $row['firstName'] . ' ' . $row['lastName'];
             } else {
-                $formations[$fid]['teams'][$tid]['players'][] = [
+                $matchups[$fid]['teams'][$tid]['players'][] = [
                     'firstName' => $row['firstName'],
                     'lastName' => $row['lastName'],
                     'role' => $row['role']
@@ -105,7 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Formation Details by Location and Time</title>
+    <title>Matchup Details by Location and Time</title>
 </head>
 <body>
     <h2>Select a Location and Time Range</h2>
@@ -122,14 +120,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
         <input type="date" name="startDate" required><br><br>
         <label for="endDate">End Date:</label>
         <input type="date" name="endDate" required><br><br>
-        <input type="submit" value="Fetch Formations">
+        <input type="submit" value="Fetch Matchups">
     </form>
 
-    <?php if (!empty($formations)): ?>
+    <?php if (!empty($matchups)): ?>
         <h3>Results</h3>
-        <?php foreach ($formations as $fid => $data): ?>
+        <?php foreach ($matchups as $fid => $data): ?>
             <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-                <strong>Formation ID:</strong> <?= $fid ?><br>
+                <strong>Matchup ID:</strong> <?= $fid ?><br>
                 <strong>Date:</strong> <?= $data['date'] ?> <strong>Time:</strong> <?= $data['startTime'] ?><br>
                 <strong>Type:</strong> <?= $data['sessionType'] ?><br>
                 <strong>Location:</strong> <?= $data['locationName'] ?> (<?= $data['locationAddress'] ?>)<br>
@@ -158,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
             </div>
         <?php endforeach; ?>
     <?php elseif ($_SERVER["REQUEST_METHOD"] == "POST"): ?>
-        <p><strong>No formations found for the selected criteria.</strong></p>
+        <p><strong>No matchups found for the selected criteria.</strong></p>
     <?php endif; ?>
 </body>
 </html>

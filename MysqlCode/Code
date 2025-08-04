@@ -10,6 +10,11 @@ gender VARCHAR(255)
 );
 
 
+CREATE TABLE PostalInfo(
+PostalCode VARCHAR(10) PRIMARY KEY, 
+Province VARCHAR(100), 
+City VARCHAR(100) 
+);
 
 CREATE TABLE TeamMatchUp (
     formationID INT AUTO_INCREMENT PRIMARY KEY,
@@ -27,6 +32,8 @@ CREATE TABLE TeamMatchUp (
     FOREIGN KEY (locationID) REFERENCES Location(locationID),
     CHECK (team1ID <> team2ID)
 );
+
+
 
 CREATE TABLE RoleIn (
     clubMemberID INT,
@@ -183,6 +190,18 @@ INSERT INTO Location (name, type, address, city, province, postalCode, webAddres
 
 
 
+INSERT INTO RoleIn (clubMemberID, teamID, role) VALUES
+(32, 3, 'outside hitter'),
+(30, 3, 'setter'),
+(35, 3, 'middle blocker'),
+(27, 3, 'libero'),
+(33, 3, 'opposite hitter'),
+(28, 4, 'outside hitter'),
+(26, 4, 'setter'),
+(29, 4, 'middle blocker'),
+(34, 4, 'libero'),
+(31, 4, 'opposite hitter');
+
 
 
 
@@ -213,8 +232,7 @@ INSERT INTO ClubMember (firstName, lastName, dateOfBirth, height, weight, SSN, m
 ('Amanda', 'Lee', '1990-02-02', 165.0, 60.0, '111-22-3334', 'MCR99999A002', '514-222-3333','102 Admin Rd', 'Laval', 'QC', 'H7A 2B3', 'Active'),
 ('Victor', 'Nguyen', '1982-03-03', 172.0, 68.0, '111-22-3335', 'MCR99999V003', '514-333-4444','103 Net St', 'Montreal', 'QC', 'H2X 3C4', 'Active'),
 
-#CAN REMOVE THESE ENTRIES 
-('Brandon', 'Cole', '1992-01-12', 180.5, 75.2, '123-45-6725', 'MCR12345A015', '514-300-3006', '215 Major St', 'Montreal', 'QC', 'H3X 13B13', 'Active'),
+('Brandon', 'Cole', '1992-01-12', 180.5, 75.2, '123-45-6725', 'MCR12345A015', '514-300-3006', '215 Major St', 'Montreal', 'QC', 'H3X 13B13', 'Active'), #60
 ('Tyler', 'Morgan', '1991-06-18', 182.3, 76.9, '123-45-6726', 'MCR12345A016', '514-300-3007', '216 Major St', 'Montreal', 'QC', 'H3X 14B14', 'Active'),
 ('Dylan', 'Bailey', '1993-03-25', 179.0, 73.4, '123-45-6727', 'MCR12345A017', '514-300-3008', '217 Major St', 'Montreal', 'QC', 'H3X 15B15', 'Active'),
 ('Justin', 'Ramirez', '1987-09-10', 184.7, 80.0, '123-45-6728', 'MCR12345A018', '514-300-3009', '218 Major St', 'Montreal', 'QC', 'H3X 16B16', 'Active'),
@@ -223,8 +241,8 @@ INSERT INTO ClubMember (firstName, lastName, dateOfBirth, height, weight, SSN, m
 ('Blake', 'Diaz', '1992-04-19', 181.6, 78.3, '123-45-6731', 'MCR12345A021', '514-300-3012', '221 Major St', 'Montreal', 'QC', 'H3X 19B19', 'Active'),
 ('Shawn', 'Murray', '1988-02-07', 178.9, 72.6, '123-45-6732', 'MCR12345A022', '514-300-3013', '222 Major St', 'Montreal', 'QC', 'H3X 20B20', 'Active'),
 ('Adrian', 'Peterson', '1994-11-11', 183.0, 79.5, '123-45-6733', 'MCR12345A023', '514-300-3014', '223 Major St', 'Montreal', 'QC', 'H3X 21B21', 'Active'),
-('Jared', 'Reynolds', '1993-10-02', 185.1, 77.9, '123-45-6734', 'MCR12345A024', '514-300-3015', '224 Major St', 'Montreal', 'QC', 'H3X 22B22', 'Active');
-#--
+('Jared', 'Reynolds', '1993-10-02', 185.1, 77.9, '123-45-6734', 'MCR12345A024', '514-300-3015', '224 Major St', 'Montreal', 'QC', 'H3X 22B22', 'Active'); #69
+
 
 
 
@@ -464,25 +482,26 @@ INSERT INTO LocationCalledAt (number, locationID) VALUES
 ('991-615-1090', 5);
 
 
-#CAN REMOVE THESE ENTRIES 
+
 INSERT INTO RoleIn (clubMemberID, teamID, role) VALUES
-(32, 3, 'outside hitter'),
-(30, 3, 'setter'),
-(35, 3, 'middle blocker'),
-(27, 3, 'libero'),
-(33, 3, 'opposite hitter'),
-(28, 4, 'outside hitter'),
-(26, 4, 'setter'),
-(29, 4, 'middle blocker'),
-(34, 4, 'libero'),
-(31, 4, 'opposite hitter');
+(60, 3, 'outside hitter'),
+(61, 3, 'setter'),
+(62, 3, 'middle blocker'),
+(63, 3, 'libero'),
+(64, 3, 'opposite hitter'),
+(65, 4, 'outside hitter'),
+(66, 4, 'setter'),
+(67, 4, 'middle blocker'),
+(68, 4, 'libero'),
+(69, 4, 'opposite hitter');
 
 
-INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, address, date, startTime, sessionType, team1Score, team2Score) VALUES
-(1, 3, 4, 3, '300 Volleyball Court, Montreal, QC', '2025-08-04', '17:00:00', 'Game', 18, 24);
-###################
 
--- 1. Add an inactive club member with a known ID (e.g., 1001)
+INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES
+(1, 3, 4, 3, '789 Sports Blvd, Westmount, QC', '2025-08-04', '17:00:00', 'Game', 18, 24);
+
+
+
 INSERT INTO ClubMember (
     clubMemberID, firstName, lastName, dateOfBirth, height, weight, SSN, medicareNumber,
     phoneNumber, address, city, province, postalCode, status
@@ -507,4 +526,98 @@ INSERT INTO Payment (
 -- 4. Link the payment to the member
 INSERT INTO MakesPayment (clubMemberID, paymentID) VALUES
     (996, 11111);
+
+
+
+##########################################################################################
+select * FROM RoleIn;
+select * FROM TeamMatchUp;
+DELETE FROM TeamMatchUp
+WHERE FormationID = 1; 
+
+
+
+
+
+
+
+
+
+###########################################################################################
+                                ##QUERY SECTION##        
+###########################################################################################   
+
+
+ ##i)
+
+SELECT
+    L.locationID,
+    L.name AS locationName,
+    L.address,
+    L.city,
+    L.province,
+    L.postalCode,
+    GROUP_CONCAT(DISTINCT LC.number SEPARATOR ', ') AS phoneNumbers,
+    L.webAddress,
+    L.type,
+    L.maxCapacity,
+    
+    -- General manager full name
+    CONCAT(P.firstName, ' ', P.lastName) AS generalManager,
+
+    -- Count personnel
+    (SELECT COUNT(*) 
+     FROM WorksAt W 
+     WHERE W.locationID = L.locationID) AS numberOfPersonnel,
+
+    -- Count club members
+    (SELECT COUNT(*) 
+     FROM EnrolledAt E 
+     WHERE E.locationID = L.locationID) AS numberOfClubMembers
+
+FROM Location L
+LEFT JOIN LocationCalledAt LC ON L.locationID = LC.locationID
+
+-- Join to get general manager (from Personnel)
+LEFT JOIN WorksAt WGM ON L.locationID = WGM.locationID
+LEFT JOIN Personnel P ON P.personnelID = WGM.personnelID AND P.role = 'General Manager'
+
+GROUP BY L.locationID
+ORDER BY numberOfClubMembers DESC;
+
+
+
+ ##ii)
+SELECT 
+    EL.name AS clubLocationName,
+    CM.clubMemberID,
+    CM.firstName,
+    CM.lastName,
+    TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) AS age,
+    CM.city,
+    CM.province,
+    CM.status,
+    WL.name AS workLocationName
+
+FROM ClubMember CM
+
+-- Join EnrolledAt to get the location they're enrolled in
+JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
+JOIN Location EL ON EA.locationID = EL.locationID
+
+-- Join with Personnel using shared SSN (assumes that's the common field)
+JOIN Personnel P ON CM.SSN = P.SSN
+
+-- Join WorksAt to get current work location
+JOIN WorksAt WA ON P.personnelID = WA.personnelID
+    AND (WA.endDate IS NULL OR WA.endDate > CURDATE()) -- Only current jobs
+
+JOIN Location WL ON WA.locationID = WL.locationID
+
+-- Filter for majors only
+WHERE TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) > 18
+
+ORDER BY WL.name ASC, age ASC;
+
+
 
