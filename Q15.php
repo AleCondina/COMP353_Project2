@@ -14,10 +14,10 @@ include 'db.php';
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Goalkeeper-Only Assigned Club Members</title>
+    <title>Middle Blocker-Only Assigned Club Members</title>
 </head>
 <body>
-<h2>Active Club Members Only Assigned as Goalkeepers</h2>
+<h2>Active Club Members Assigned Only as Middle Blockers</h2>
 
 <?php
 $sql = "
@@ -27,6 +27,7 @@ $sql = "
         CM.lastName,
         TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) AS age,
         CM.phoneNumber,
+        CM.email,
         L.name AS locationName
     FROM ClubMember CM
     JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
@@ -34,13 +35,13 @@ $sql = "
     WHERE CM.status = 'Active'
       AND CM.clubMemberID IN (
           SELECT clubMemberID
-          FROM FormationPlayers
+          FROM RoleIn
           GROUP BY clubMemberID
           HAVING 
-            COUNT(CASE WHEN role = 'Goalkeeper' THEN 1 END) = COUNT(*)
-            AND COUNT(*) > 0
+            COUNT(*) > 0 AND
+            COUNT(CASE WHEN role = 'middle blocker' THEN 1 END) = COUNT(*)
       )
-    ORDER BY locationName ASC, clubMemberID ASC;
+    ORDER BY L.name ASC, CM.clubMemberID ASC;
 ";
 
 $result = $conn->query($sql);
@@ -53,6 +54,7 @@ if ($result && $result->num_rows > 0) {
                 <th>Last Name</th>
                 <th>Age</th>
                 <th>Phone</th>
+                <th>Email</th>
                 <th>Current Location</th>
             </tr>";
     while ($row = $result->fetch_assoc()) {
@@ -62,12 +64,13 @@ if ($result && $result->num_rows > 0) {
                 <td>{$row['lastName']}</td>
                 <td>{$row['age']}</td>
                 <td>{$row['phoneNumber']}</td>
+                <td>{$row['email']}</td>
                 <td>{$row['locationName']}</td>
               </tr>";
     }
     echo "</table>";
 } else {
-    echo "<p>No club members found who have only been assigned as goalkeepers.</p>";
+    echo "<p>No club members found who have only been assigned as middle blockers.</p>";
 }
 
 $conn->close();
