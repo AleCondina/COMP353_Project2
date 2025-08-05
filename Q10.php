@@ -35,21 +35,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
             TMU.team2Score,
             L.name AS locationName,
             L.address AS locationAddress,
+
             T1.teamID AS team1ID,
             T1.name AS team1Name,
+            HC1.firstName AS hc1FirstName,
+            HC1.lastName AS hc1LastName,
+
             T2.teamID AS team2ID,
             T2.name AS team2Name,
+            HC2.firstName AS hc2FirstName,
+            HC2.lastName AS hc2LastName,
+
             RI.teamID AS playerTeamID,
             RI.role,
             CM.clubMemberID,
             CM.firstName,
             CM.lastName
+
         FROM TeamMatchUp TMU
-        JOIN Location L  ON TMU.locationID = L.locationID
+        JOIN Location L ON TMU.locationID = L.locationID
         JOIN Team T1 ON TMU.team1ID = T1.teamID
+        LEFT JOIN HeadCoachOf HCO1 ON HCO1.teamID = T1.teamID
+        LEFT JOIN Personnel HC1 ON HCO1.personnelID = HC1.personnelID
+
         JOIN Team T2 ON TMU.team2ID = T2.teamID
+        LEFT JOIN HeadCoachOf HCO2 ON HCO2.teamID = T2.teamID
+        LEFT JOIN Personnel HC2 ON HCO2.personnelID = HC2.personnelID
+
         LEFT JOIN RoleIn RI ON RI.teamID IN (T1.teamID, T2.teamID)
         LEFT JOIN ClubMember CM ON RI.clubMemberID = CM.clubMemberID
+
         WHERE TMU.locationID = ? AND TMU.date BETWEEN ? AND ?
         ORDER BY TMU.date, TMU.startTime, TMU.formationID, RI.teamID
     ";
@@ -67,8 +82,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
                 'date' => $row['date'],
                 'startTime' => $row['startTime'],
                 'sessionType' => $row['sessionType'],
-                'team1' => ['id' => $row['team1ID'], 'name' => $row['team1Name']],
-                'team2' => ['id' => $row['team2ID'], 'name' => $row['team2Name']],
+                'team1' => [
+                    'id' => $row['team1ID'],
+                    'name' => $row['team1Name'],
+                    'headCoach' => $row['hc1FirstName'] && $row['hc1LastName']
+                        ? $row['hc1FirstName'] . ' ' . $row['hc1LastName']
+                        : 'N/A'
+                ],
+                'team2' => [
+                    'id' => $row['team2ID'],
+                    'name' => $row['team2Name'],
+                    'headCoach' => $row['hc2FirstName'] && $row['hc2LastName']
+                        ? $row['hc2FirstName'] . ' ' . $row['hc2LastName']
+                        : 'N/A'
+                ],
                 'team1Score' => $row['team1Score'],
                 'team2Score' => $row['team2Score'],
                 'locationName' => $row['locationName'],
@@ -78,23 +105,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
 
             foreach ([$row['team1ID'], $row['team2ID']] as $tid) {
                 $matchups[$fid]['teams'][$tid] = [
-                    'players' => [],
-                    'headCoach' => null
+                    'players' => []
                 ];
             }
         }
 
         if ($row['playerTeamID']) {
             $tid = $row['playerTeamID'];
-            if ($row['role'] === 'Head Coach') {
-                $matchups[$fid]['teams'][$tid]['headCoach'] = $row['firstName'] . ' ' . $row['lastName'];
-            } else {
-                $matchups[$fid]['teams'][$tid]['players'][] = [
-                    'firstName' => $row['firstName'],
-                    'lastName' => $row['lastName'],
-                    'role' => $row['role']
-                ];
-            }
+            $matchups[$fid]['teams'][$tid]['players'][] = [
+                'firstName' => $row['firstName'],
+                'lastName' => $row['lastName'],
+                'role' => $row['role']
+            ];
         }
     }
 }
@@ -110,11 +132,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
     <form method="post">
         <label for="locationID">Location:</label>
         <select name="locationID" required>
-            <?php
-            foreach (fetchLocations($conn) as $loc) {
-                echo "<option value='{$loc['locationID']}'>" . htmlspecialchars($loc['name']) . " - " . htmlspecialchars($loc['address']) . "</option>";
-            }
-            ?>
+            <?php foreach (fetchLocations($conn) as $loc): ?>
+                <option value="<?= $loc['locationID'] ?>"><?= htmlspecialchars($loc['name']) ?> - <?= htmlspecialchars($loc['address']) ?></option>
+            <?php endforeach; ?>
         </select><br><br>
         <label for="startDate">Start Date:</label>
         <input type="date" name="startDate" required><br><br>
@@ -137,7 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
                         <?php $teamID = $data[$key]['id']; ?>
                         <li>
                             <strong><?= $data[$key]['name'] ?> (ID: <?= $teamID ?>)</strong><br>
-                            Head Coach: <?= $data['teams'][$teamID]['headCoach'] ?? 'N/A' ?><br>
+                            Head Coach: <?= $data[$key]['headCoach'] ?><br>
                             <em>Players:</em>
                             <ul>
                                 <?php foreach ($data['teams'][$teamID]['players'] as $player): ?>
