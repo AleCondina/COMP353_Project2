@@ -28,7 +28,6 @@ CREATE TABLE TeamMatchUp (
     team1ID INT NOT NULL,
     team2ID INT NOT NULL,
     locationID INT NOT NULL,
-    address VARCHAR(255) NOT NULL,
     date DATE NOT NULL,
     startTime TIME NOT NULL,
     sessionType ENUM('Training', 'Game') NOT NULL,
@@ -50,7 +49,7 @@ CREATE TABLE RoleIn (
     FOREIGN KEY (clubMemberID) REFERENCES ClubMember(clubMemberID),
     FOREIGN KEY (formationID) REFERENCES TeamMatchUp(formationID)
 );
-
+ 
 
 
 CREATE TABLE Location (
@@ -78,9 +77,10 @@ CREATE TABLE Personnel (
     province VARCHAR(50),
     postalCode VARCHAR(10),
     email VARCHAR(100),
-    role ENUM('Administrator', 'Captain', 'Coach', 'Assistant Coach','General Manager', 'Other') NOT NULL,
+    role ENUM('Administrator', 'Captain', 'Coach', 'Assistant Coach','Head Coach','General Manager', 'Other') NOT NULL,
     mandate ENUM('Volunteer', 'Salaried') NOT NULL
 );
+
 
 CREATE TABLE ClubMember (
     clubMemberID INT AUTO_INCREMENT PRIMARY KEY,
@@ -175,7 +175,7 @@ CREATE TABLE MakesPayment (
 CREATE TABLE EnrolledAt (
     clubMemberID INT,
     locationID INT,
-    startDate DATE DEFAULT NULL,
+    startDate DATE NOT NULL,
     endDate DATE DEFAULT NULL,
     PRIMARY KEY (clubMemberID, locationID, startDate),
     FOREIGN KEY (clubMemberID) REFERENCES ClubMember(clubMemberID),
@@ -198,9 +198,19 @@ INSERT INTO Location (name, type, address, city, province, postalCode, webAddres
 ('MVC Anjou', 'Branch', '444 Volley Rd', 'Anjou', 'QC', 'H1K 4A5', 'https://mvc.ca/anjou', 200),
 ('MVC Plateau', 'Branch', '555 Club St', 'Montreal', 'QC', 'H2W 1S1', 'https://mvc.ca/plateau', 180);
 
+SELECT 
+    TABLE_NAME, 
+    COLUMN_NAME, 
+    CONSTRAINT_NAME, 
+    REFERENCED_TABLE_NAME, 
+    REFERENCED_COLUMN_NAME 
+FROM 
+    information_schema.KEY_COLUMN_USAGE 
+WHERE 
+    REFERENCED_TABLE_NAME = 'EnrolledAt';
 
 
-INSERT INTO RoleIn (clubMemberID, teamID, role) VALUES
+INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
 (32, 3, 'outside hitter'),
 (30, 3, 'setter'),
 (35, 3, 'middle blocker'),
@@ -306,8 +316,6 @@ INSERT INTO Personnel (SSN, firstName, lastName, dateOfBirth, medicareNumber, ph
 ('111-22-3340', 'Sophia', 'Brown', '1989-08-08', 'PERS123456H', '514-888-9999', '108 Set Way', 'Montreal', 'QC', 'H2X 8H9', 'sophia.brown@mvc.ca', 'General Manager', 'Salaried'),
 ('111-22-3341', 'Brian', 'Doe', '1975-09-09', 'PERS123456I', '514-999-0000', '109 Jump Rd', 'Anjou', 'QC', 'H1K 9I0', 'brian.doe@mvc.ca', 'Other', 'Volunteer'),
 ('111-22-3342', 'Isabelle', 'Smith', '1987-10-10', 'PERS123456J', '514-000-1111', '110 Tip St', 'Montreal', 'QC', 'H2X 0J1', 'isabelle.smith@mvc.ca', 'Assistant Coach', 'Salaried');
-
-
 
 
 
@@ -433,39 +441,34 @@ INSERT INTO WorksAt (personnelID, locationID, startDate, endDate) VALUES
 
 
 
-
-
-INSERT INTO EnrolledAt (clubMemberID, locationID) VALUES
-(1, 3),
-(2, 5),
-(3, 2),
-(4, 2),
-(5, 5),
-(6, 4),
-(7, 5),
-(8, 3),
-(9, 4),
-(10, 4),
-(11, 3),
-(12, 1),
-(13, 3),
-(14, 5),
-(15, 1),
-(16, 4),
-(17, 5),
-(18, 3),
-(19, 2),
-(20, 2),
-(26, 3),
-(27, 3),
-(28, 3),
-(29, 3),
-(30, 3),
-(31, 4),
-(32, 4),
-(33, 4),
-(34, 4),
-(35, 4);
+INSERT INTO EnrolledAt (clubMemberID, locationID, startDate) VALUES
+(1, 3, '2020-06-15'),
+(2, 5, '2022-09-01'),
+(3, 2, '2023-01-20'),
+(4, 2, '2021-03-12'),
+(5, 5, '2019-11-07'),
+(6, 4, '2023-07-30'),
+(7, 5, '2020-02-18'),
+(8, 3, '2021-05-10'),
+(9, 4, '2022-08-23'),
+(10, 4, '2019-10-02'),
+(11, 3, '2023-12-01'),
+(12, 1, '2020-04-25'),
+(13, 3, '2024-01-17'),
+(14, 5, '2022-11-11'),
+(15, 1, '2020-07-03'),
+(16, 4, '2023-02-22'),
+(17, 5, '2021-06-09'),
+(18, 3, '2019-09-14'),
+(19, 2, '2023-03-05'),
+(20, 2, '2021-08-29'),
+(26, 3, '2020-01-19'),
+(27, 3, '2022-05-06'),
+(28, 3, '2023-06-12'),
+(29, 3, '2019-12-31'),
+(30, 3, '2024-03-09'),
+(33, 4, '2023-11-14'),
+(35, 4, '2021-10-16');
 
 
 
@@ -491,7 +494,25 @@ INSERT INTO LocationCalledAt (number, locationID) VALUES
 ('230-989-1013', 5),
 ('991-615-1090', 5);
 
+INSERT INTO Team (teamID, name, gender) VALUES
+(1, 'Falcons', 'Male'),
+(2, 'Tigers', 'Female'),
+(3, 'Hawks', 'Male'),
+(4, 'Eagles', 'Male'),
+(5, 'Wolves', 'Male'),
+(6, 'Panthers', 'Female'),
+(7, 'Bears', 'Male'),
+(8, 'Lions', 'Female'),
+(9, 'Sharks', 'Male'),
+(10, 'Cheetahs', 'Female'),
+(21, 'Dogs', 'Male'),
+(22, 'Cats', 'Female'),
+(23, 'girls1', 'Female'),
+(24, 'girls2', 'Female'),
+(25, 'boys1', 'Male'),
+(26, 'boys2', 'Male');
 
+#Q10 requirements
 
 INSERT INTO RoleIn (clubMemberID, teamID, role) VALUES
 (60, 3, 'outside hitter'),
@@ -505,32 +526,58 @@ INSERT INTO RoleIn (clubMemberID, teamID, role) VALUES
 (68, 4, 'libero'),
 (69, 4, 'opposite hitter');
 
-
+SELECT * FROM ClubMember;
 
 INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES
-(1, 3, 4, 3, '789 Sports Blvd, Westmount, QC', '2025-08-04', '17:00:00', 'Game', 18, 24);
+(1, 3, 4, 3, '2025-08-04', '17:00:00', 'Game', 18, 24);
 
 
+
+INSERT INTO Personnel (
+    SSN, firstName, lastName, dateOfBirth, medicareNumber, phoneNumber, address, city, province, postalCode, email, role, mandate) VALUES 
+('211-23-3342', 'joseph', 'richmand', '1980-03-15', 'PERS165646J', '514-423-3324','200 Coach Ln', 'Montreal', 'QC', 'H1X 1X1', 'joseph.richmand@example.com', 'Head Coach', 'Salaried'),
+('121-42-3342', 'James', 'Thomyguyun', '1975-11-25', 'PERS165346J', '514-234-6574','210 Coach St', 'Montreal', 'QC', 'H1Y 2Y2', 'James.Thomyguyun@example.com', 'Head Coach', 'Salaried');
+
+
+CREATE TABLE HeadCoachOf (
+  teamID INT UNIQUE PRIMARY KEY,
+  personnelID INT,
+  FOREIGN KEY (personnelID) REFERENCES Personnel(personnelID),
+  FOREIGN KEY (teamID) REFERENCES Team(teamID)
+);
+
+ INSERT INTO HeadCoachOf (teamID,personnelID) VALUES
+ (3 , 23),
+ (4 , 24);
+ 
+ 
+
+#------------
 
 INSERT INTO ClubMember (
     clubMemberID, firstName, lastName, dateOfBirth, height, weight, SSN, medicareNumber,
     phoneNumber, address, city, province, postalCode, status
-) VALUES (
-    996, 'Tina', 'sentiak', '2004-04-11', 165.2, 60.5, '999-68-7667', 'ZZZ799448777',
-    '4501734567', '123 Maine Street', 'Montreal', 'QC', 'H3Z2X3', 'Inactive'
-);
+) VALUES 
+    (996, 'Tina', 'sentiak', '2004-04-11', 165.2, 60.5, '999-68-7667', 'ZZZ799448777', '4501734567', '123 Maine Street', 'Montreal', 'QC', 'H3Z2X3', 'Inactive'),
+    (997, 'Jerimiah', 'Acesus', '2002-04-11', 185.2, 64.5, '991-68-7667', 'ZZZ795548777', '4505634567', '23 Monte Street', 'Montreal', 'QC', 'H7X3G6', 'Inactive');
+
+
+
 
 -- 2. Enroll the member in 2 different locations (e.g., locationID 1 and 2)
 INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate) VALUES 
   (996, 1, '2020-01-01', '2022-12-31'),
-  (996, 2, '2023-01-01', NULL);
+  (996, 2, '2023-01-01', NULL),
+  (997, 3, '2021-03-01', '2021-12-31'),
+  (997, 4, '2022-02-01', NULL);
+
 
 
 -- 3. Insert a payment made 2+ years ago (e.g., paymentID 5001)
 INSERT INTO Payment (
     paymentID, paymentDate, amount, method, forYear
 ) VALUES (
-    11111, '2022-07-15', 350.00, 'Credit', 2021
+    11111, '2022-07-15', 20.00, 'Credit', 2021
 );
 
 -- 4. Link the payment to the member

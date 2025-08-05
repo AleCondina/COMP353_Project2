@@ -32,19 +32,20 @@ include 'db.php'; // Make sure this file contains your database connection logic
     <h2>Inactive Club Members with 2+ Locations and 2+ Years of Membership</h2>
 
     <?php
-    $query = "
-        SELECT
-            CM.clubMemberID,
-            CM.firstName,
-            CM.lastName
-        FROM ClubMember CM
-        JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
-        WHERE CM.status = 'Inactive'
-          AND TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) >= 2
-        GROUP BY CM.clubMemberID, CM.firstName, CM.lastName
-        HAVING COUNT(DISTINCT EA.locationID) >= 2
-        ORDER BY CM.clubMemberID ASC;
-    ";
+$query = "
+     SELECT
+    CM.clubMemberID,
+    CM.firstName,
+    CM.lastName
+FROM ClubMember CM
+JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
+WHERE CM.status = 'Inactive'
+GROUP BY CM.clubMemberID, CM.firstName, CM.lastName
+HAVING 
+    COUNT(DISTINCT EA.locationID) >= 2
+    AND MIN(EA.startDate) <= DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
+ORDER BY CM.clubMemberID ASC;
+";
 
     $result = $conn->query($query);
 
