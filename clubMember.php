@@ -15,8 +15,8 @@ if (isset($_GET['delete'])) {
 // Handle creation
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt = $conn->prepare("INSERT INTO ClubMember 
-        (firstName, lastName, dateOfBirth, height, weight, SSN, medicareNumber, phoneNumber, address, city, province, postalCode, status, gender)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        (firstName, lastName, dateOfBirth, height, weight, SSN, medicareNumber, phoneNumber, email, address, city, province, postalCode, status, gender)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
         "sssddsssssssss",
@@ -28,6 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $_POST['SSN'],
         $_POST['medicareNumber'],
         $_POST['phoneNumber'],
+        $_POST['email'],
         $_POST['address'],
         $_POST['city'],
         $_POST['province'],
@@ -65,6 +66,7 @@ $result = $conn->query("SELECT * FROM ClubMember");
     <input type="text" name="SSN" placeholder="SSN (XXX-XX-XXXX)" maxlength="11" required>
     <input type="text" name="medicareNumber" placeholder="Medicare Number" maxlength="12" required>
     <input type="text" name="phoneNumber" placeholder="Phone Number">
+    <input type="text" name="email" placeholder="Email">
     <input type="text" name="address" placeholder="Address">
     <input type="text" name="city" placeholder="City">
     <input type="text" name="province" placeholder="Province">
@@ -82,7 +84,7 @@ $result = $conn->query("SELECT * FROM ClubMember");
 <table border="1" cellpadding="6" cellspacing="0">
     <tr>
         <th>ID</th><th>First</th><th>Last</th><th>DOB</th><th>Height</th><th>Weight</th>
-        <th>SSN</th><th>Medicare</th><th>Phone</th><th>Address</th><th>City</th>
+        <th>SSN</th><th>Medicare</th><th>Phone</th><th>Email</th><th>Address</th><th>City</th>
         <th>Province</th><th>Postal Code</th><th>Gender</th><th>Status</th><th>Actions</th>
     </tr>
     <?php while ($row = $result->fetch_assoc()): ?>
@@ -96,6 +98,7 @@ $result = $conn->query("SELECT * FROM ClubMember");
         <td><?= htmlspecialchars($row['SSN']) ?></td>
         <td><?= htmlspecialchars($row['medicareNumber']) ?></td>
         <td><?= htmlspecialchars($row['phoneNumber']) ?></td>
+        <td><?= htmlspecialchars($row['email'] ?? '') ?></td>  
         <td><?= htmlspecialchars($row['address']) ?></td>
         <td><?= htmlspecialchars($row['city']) ?></td>
         <td><?= htmlspecialchars($row['province']) ?></td>
