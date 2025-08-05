@@ -46,7 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
             HC2.firstName AS hc2FirstName,
             HC2.lastName AS hc2LastName,
 
-            RI.teamID AS playerTeamID,
             RI.role,
             CM.clubMemberID,
             CM.firstName,
@@ -62,11 +61,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
         LEFT JOIN HeadCoachOf HCO2 ON HCO2.teamID = T2.teamID
         LEFT JOIN Personnel HC2 ON HCO2.personnelID = HC2.personnelID
 
-        LEFT JOIN RoleIn RI ON RI.teamID IN (T1.teamID, T2.teamID)
+        LEFT JOIN RoleIn RI ON RI.formationID = TMU.formationID
         LEFT JOIN ClubMember CM ON RI.clubMemberID = CM.clubMemberID
 
         WHERE TMU.locationID = ? AND TMU.date BETWEEN ? AND ?
-        ORDER BY TMU.date, TMU.startTime, TMU.formationID, RI.teamID
+        ORDER BY TMU.date, TMU.startTime, TMU.formationID
     ";
 
     $stmt = $conn->prepare($query);
@@ -100,19 +99,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
                 'team2Score' => $row['team2Score'],
                 'locationName' => $row['locationName'],
                 'locationAddress' => $row['locationAddress'],
-                'teams' => []
+                'players' => []
             ];
-
-            foreach ([$row['team1ID'], $row['team2ID']] as $tid) {
-                $matchups[$fid]['teams'][$tid] = [
-                    'players' => []
-                ];
-            }
         }
 
-        if ($row['playerTeamID']) {
-            $tid = $row['playerTeamID'];
-            $matchups[$fid]['teams'][$tid]['players'][] = [
+        if ($row['clubMemberID']) {
+            $matchups[$fid]['players'][] = [
                 'firstName' => $row['firstName'],
                 'lastName' => $row['lastName'],
                 'role' => $row['role']
@@ -151,24 +143,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['locationID'], $_POST['
                 <strong>Date:</strong> <?= $data['date'] ?> <strong>Time:</strong> <?= $data['startTime'] ?><br>
                 <strong>Type:</strong> <?= $data['sessionType'] ?><br>
                 <strong>Location:</strong> <?= $data['locationName'] ?> (<?= $data['locationAddress'] ?>)<br>
-                <strong>Teams:</strong><br>
+                <strong>Teams:</strong>
                 <ul>
-                    <?php foreach (['team1', 'team2'] as $key): ?>
-                        <?php $teamID = $data[$key]['id']; ?>
-                        <li>
-                            <strong><?= $data[$key]['name'] ?> (ID: <?= $teamID ?>)</strong><br>
-                            Head Coach: <?= $data[$key]['headCoach'] ?><br>
-                            <em>Players:</em>
-                            <ul>
-                                <?php foreach ($data['teams'][$teamID]['players'] as $player): ?>
-                                    <li><?= htmlspecialchars($player['firstName']) ?> <?= htmlspecialchars($player['lastName']) ?> - <?= $player['role'] ?></li>
-                                <?php endforeach; ?>
-                                <?php if (empty($data['teams'][$teamID]['players'])): ?>
-                                    <li>No players assigned</li>
-                                <?php endif; ?>
-                            </ul>
-                        </li>
+                    <li><strong><?= $data['team1']['name'] ?> (ID: <?= $data['team1']['id'] ?>)</strong><br>
+                        Head Coach: <?= $data['team1']['headCoach'] ?>
+                    </li>
+                    <li><strong><?= $data['team2']['name'] ?> (ID: <?= $data['team2']['id'] ?>)</strong><br>
+                        Head Coach: <?= $data['team2']['headCoach'] ?>
+                    </li>
+                </ul>
+                <em>Players:</em>
+                <ul>
+                    <?php foreach ($data['players'] as $player): ?>
+                        <li><?= htmlspecialchars($player['firstName']) ?> <?= htmlspecialchars($player['lastName']) ?> - <?= $player['role'] ?></li>
                     <?php endforeach; ?>
+                    <?php if (empty($data['players'])): ?>
+                        <li>No players assigned</li>
+                    <?php endif; ?>
                 </ul>
                 <?php if ($data['sessionType'] === 'Game'): ?>
                     <strong>Score:</strong> <?= $data['team1Score'] ?> - <?= $data['team2Score'] ?><br>
