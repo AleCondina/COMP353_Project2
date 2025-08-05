@@ -90,21 +90,21 @@ $result = $conn->query("SELECT * FROM ClubMember");
     <?php while ($row = $result->fetch_assoc()): ?>
     <tr>
         <td><?= htmlspecialchars($row['clubMemberID']) ?></td>
-        <td><?= htmlspecialchars($row['firstName']) ?></td>
-        <td><?= htmlspecialchars($row['lastName']) ?></td>
-        <td><?= htmlspecialchars($row['dateOfBirth']) ?></td>
-        <td><?= htmlspecialchars($row['height']) ?></td>
-        <td><?= htmlspecialchars($row['weight']) ?></td>
-        <td><?= htmlspecialchars($row['SSN']) ?></td>
-        <td><?= htmlspecialchars($row['medicareNumber']) ?></td>
-        <td><?= htmlspecialchars($row['phoneNumber']) ?></td>
+        <td><?= htmlspecialchars($row['firstName']?? '') ?></td>
+        <td><?= htmlspecialchars($row['lastName']?? '') ?></td>
+        <td><?= htmlspecialchars($row['dateOfBirth']?? '') ?></td>
+        <td><?= htmlspecialchars($row['height']?? '') ?></td>
+        <td><?= htmlspecialchars($row['weight']?? '') ?></td>
+        <td><?= htmlspecialchars($row['SSN']?? '') ?></td>
+        <td><?= htmlspecialchars($row['medicareNumber']?? '') ?></td>
+        <td><?= htmlspecialchars($row['phoneNumber']?? '') ?></td>
         <td><?= htmlspecialchars($row['email'] ?? '') ?></td>  
-        <td><?= htmlspecialchars($row['address']) ?></td>
-        <td><?= htmlspecialchars($row['city']) ?></td>
-        <td><?= htmlspecialchars($row['province']) ?></td>
-        <td><?= htmlspecialchars($row['postalCode']) ?></td>
-        <td><?= htmlspecialchars($row['gender']) ?></td>
-        <td><?= htmlspecialchars($row['status']) ?></td>
+        <td><?= htmlspecialchars($row['address']?? '') ?></td>
+        <td><?= htmlspecialchars($row['city']?? '') ?></td>
+        <td><?= htmlspecialchars($row['province']?? '') ?></td>
+        <td><?= htmlspecialchars($row['postalCode']?? '') ?></td>
+        <td><?= htmlspecialchars($row['gender']?? '') ?></td>
+        <td><?= htmlspecialchars($row['status']?? '') ?></td>
         <td>
             <a href="clubMember_edit.php?id=<?= $row['clubMemberID'] ?>">Edit</a>
             <a href="clubMember.php?delete=<?= $row['clubMemberID'] ?>" onclick="return confirm('Delete this club member?')">Delete</a>

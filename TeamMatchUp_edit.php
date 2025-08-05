@@ -2,14 +2,14 @@
 require_once "db.php";
 
 if (!isset($_GET['id'])) {
-    header("Location: teamformation.php");
+    header("Location: TeamMatchUp.php");
     exit;
 }
 
 $formationID = $_GET['id'];
 
 // Fetch the formation details
-$stmt = $conn->prepare("SELECT * FROM TeamFormation WHERE formationID = ?");
+$stmt = $conn->prepare("SELECT * FROM TeamMatchUp WHERE formationID = ?");
 $stmt->bind_param("i", $formationID);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -27,7 +27,7 @@ $locations = $locationQuery->fetch_all(MYSQLI_ASSOC);
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
-    $stmt = $conn->prepare("UPDATE TeamFormation SET locationID = ?, date = ?, startTime = ?, sessionType = ?, team1Score = ?, team2Score = ? WHERE formationID = ?");
+    $stmt = $conn->prepare("UPDATE TeamMatchUp SET locationID = ?, date = ?, startTime = ?, sessionType = ?, team1Score = ?, team2Score = ? WHERE formationID = ?");
     $stmt->bind_param("isssiii",
         $_POST['locationID'],
         $_POST['date'],
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     );
     $stmt->execute();
     $stmt->close();
-    header("Location: teamformation.php");
+    header("Location: TeamMatchUp.php");
     exit;
 }
 ?>
@@ -82,6 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
         <button type="submit" name="update">Update</button>
     </form>
 
-    <p><a href="teamformation.php">Back to Team Formations</a></p>
+    <p><a href="TeamMatchUp.php">Back to Team Formations</a></p>
 </body>
 </html>

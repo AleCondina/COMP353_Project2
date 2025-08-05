@@ -22,11 +22,12 @@ if ($locationID) {
                FM.phoneNumber
         FROM   FamilyMember      FM
         JOIN   ClubMember        CM  ON CM.SSN = FM.SSN          /* same person */
-        JOIN   FormationPlayers  FP  ON FP.clubMemberID = CM.clubMemberID
-        JOIN   TeamFormation     TF  ON TF.formationID  = FP.formationID
+        JOIN   RoleIn  FP  ON FP.clubMemberID = CM.clubMemberID
+        JOIN   TeamMatchUp     TF  ON TF.formationID  = FP.formationID
         JOIN   EnrolledAt        EA  ON EA.clubMemberID = CM.clubMemberID
         WHERE  CM.status = 'Active'
-          AND  FP.role   = 'Head Coach'     /* they coach at least one session   */
+          AND  EA.endDate is null
+          AND  FP.role   = 'head coach'     /* they coach at least one session   */
           AND  EA.locationID = ?            /* person is enrolled at location    */
           AND  TF.locationID = EA.locationID/* formation held at same location   */
     ");
