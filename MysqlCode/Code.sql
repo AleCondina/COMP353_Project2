@@ -43,9 +43,9 @@ CREATE TABLE TeamMatchUp (
 
 CREATE TABLE RoleIn (
     clubMemberID INT,
-    formationID INT NOT NULL,
-    role ENUM('setter', 'outside hitter', 'opposite hitter', 'libero', 'middle blocker', 'defensive specialist') NOT NULL,
-    PRIMARY KEY (clubMemberID),
+    formationID INT,
+    role VARCHAR(50),
+    PRIMARY KEY (clubMemberID, formationID),
     FOREIGN KEY (clubMemberID) REFERENCES ClubMember(clubMemberID),
     FOREIGN KEY (formationID) REFERENCES TeamMatchUp(formationID)
 );
@@ -210,17 +210,6 @@ WHERE
     REFERENCED_TABLE_NAME = 'EnrolledAt';
 
 
-INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
-(32, 3, 'outside hitter'),
-(30, 3, 'setter'),
-(35, 3, 'middle blocker'),
-(27, 3, 'libero'),
-(33, 3, 'opposite hitter'),
-(28, 4, 'outside hitter'),
-(26, 4, 'setter'),
-(29, 4, 'middle blocker'),
-(34, 4, 'libero'),
-(31, 4, 'opposite hitter');
 
 
 
@@ -518,76 +507,154 @@ INSERT INTO Team (teamID, name, gender) VALUES
 
 SELECT * FROM ClubMember;
 
+INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate) VALUES  
+  (61, 3, '2023-01-01', NULL),
+  (66, 3, '2022-02-01', NULL);
+
 INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES
 (1, 3, 4, 3, '2025-08-04', '17:00:00', 'Game', 18, 24),
 (2, 9, 21, 3, '2025-07-02', '15:00:00', 'Game', 18, 24),
 (3, 9, 21, 3, '2025-08-04', '13:00:00', 'Training', 18, 19),
 (4, 9, 21, 3, '2025-10-06', '19:00:00', 'Training', 17, 12),
 (5, 9, 21, 3, '2025-10-05', '17:00:00', 'Game', 10, 10),
-(6, 9, 21, 3, '2025-11-12', '15:00:00', 'Game', 19, 12);
+(6, 9, 21, 3, '2025-11-12', '15:00:00', 'Game', 19, 12),
+(7, 9, 21, 3, '2025-01-11', '12:00:00', 'Game', 12, 12),
+(8, 9, 21, 3, '2024-06-10', '15:00:00', 'Game', 19, 12),
+(9, 9, 21, 3, '2024-09-11', '12:00:00', 'Game', 12, 12);
 
+	DELETE FROM RoleIn
+WHERE clubMemberID = 60
+  AND formationID = 6;
 
+SELECT * FROM RoleIn;
 
+INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
+(32, 3, 'outside hitter'),
+(30, 3, 'setter'),
+(35, 3, 'middle blocker'),
+(27, 3, 'libero'),
+(33, 3, 'opposite hitter'),
+(28, 4, 'outside hitter'),
+(26, 4, 'setter'),
+(29, 4, 'middle blocker'),
+(34, 4, 'libero'),
+(31, 4, 'opposite hitter');
 
-SELECT * FROM InTeam;
-
+INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
+(8, 1, 'setter'),
+(12, 1, 'setter'),
+(18, 1, 'outside hitter'),
+(27, 1, 'outside hitter');
 
 INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
 (60, 2, 'outside hitter'),
 (61, 2, 'setter'),
-(62, 2, 'middle blocker'),
+(62, 2, 'outside hitter'),
 (63, 2, 'libero'),
 (64, 2, 'opposite hitter'),
 (65, 2, 'outside hitter'),
 (66, 2, 'setter'),
 (67, 2, 'middle blocker'),
-(68, 2, 'libero'),
+(68, 2, 'setter'),
 (69, 2, 'opposite hitter'),
 
-(60, 3, 'outside hitter'),
+
+(60, 3, 'setter'),
 (61, 3, 'setter'),
-(62, 3, 'middle blocker'),
-(63, 3, 'libero'),
-(64, 3, 'opposite hitter'),
-(65, 3, 'outside hitter'),
+(62, 3, 'libero'),
+(63, 3, 'setter'),
+(64, 3, 'outside hitter'),
+(65, 3, 'opposite hitter'),
 (66, 3, 'setter'),
 (67, 3, 'middle blocker'),
-(68, 3, 'libero'),
-(69, 3, 'opposite hitter'),
+(68, 3, 'setter'),
+(69, 3, 'outside hitter'),
 
-(60, 4, 'outside hitter'),
+(60, 4, 'middle blocker'),
 (61, 4, 'setter'),
-(62, 4, 'middle blocker'),
-(63, 4, 'libero'),
-(64, 4, 'opposite hitter'),
-(65, 4, 'outside hitter'),
+(62, 4, 'libero'),
+(63, 4, 'opposite hitter'),
+(64, 4, 'setter'),
+(65, 4, 'setter'),
 (66, 4, 'setter'),
 (67, 4, 'middle blocker'),
-(68, 4, 'libero'),
-(69, 4, 'opposite hitter'),
+(68, 4, 'setter'),
+(69, 4, 'setter'),
 
-(60, 5, 'outside hitter'),
+(60, 5, 'libero'),
 (61, 5, 'setter'),
-(62, 5, 'middle blocker'),
-(63, 5, 'libero'),
-(64, 5, 'opposite hitter'),
-(65, 5, 'outside hitter'),
+(62, 5, 'opposite hitter'),
+(63, 5, 'outside hitter'),
+(64, 5, 'libero'),
+(65, 5, 'libero'),
 (66, 5, 'setter'),
 (67, 5, 'middle blocker'),
-(68, 5, 'libero'),
-(69, 5, 'opposite hitter'),
+(68, 5, 'setter'),
+(69, 5, 'libero'),
 
 
-(60, 6, 'outside hitter'),
+(60, 6, 'opposite hitter'),
 (61, 6, 'setter'),
-(62, 6, 'middle blocker'),
-(63, 6, 'libero'),
-(64, 6, 'opposite hitter'),
+(62, 6, 'outside hitter'),
+(63, 6, 'middle blocker'),
+(64, 6, 'middle blocker'),
 (65, 6, 'outside hitter'),
 (66, 6, 'setter'),
 (67, 6, 'middle blocker'),
-(68, 6, 'libero'),
-(69, 6, 'opposite hitter');
+(68, 6, 'setter'),
+(69, 6, 'setter'),
+
+(60, 7, 'outside hitter'),
+(61, 7, 'setter'),
+(62, 7, 'middle blocker'),
+(63, 7, 'libero'),
+(64, 7, 'opposite hitter'),
+(65, 7, 'middle blocker'),
+(66, 7, 'setter'),
+(67, 7, 'middle blocker'),
+(68, 7, 'setter'),
+(69, 7, 'libero'),
+
+(60, 8, 'setter'),
+(61, 8, 'setter'),
+(62, 8, 'libero'),
+(63, 8, 'setter'),
+(64, 8, 'outside hitter'),
+(65, 8, 'opposite hitter'),
+(66, 8, 'setter'),
+(67, 8, 'middle blocker'),
+(68, 8, 'setter'),
+(69, 8, 'outside hitter'),
+
+(60, 9, 'middle blocker'),
+(61, 9, 'setter'),
+(62, 9, 'libero'),
+(63, 9, 'opposite hitter'),
+(64, 9, 'setter'),
+(65, 9, 'setter'),
+(66, 9, 'setter'),
+(67, 9, 'middle blocker'),
+(68, 9, 'setter'),
+(69, 9, 'middle blocker');
+
+
+SELECT DISTINCT RI.role, TM.sessionType
+FROM RoleIn RI
+JOIN TeamMatchUp TM ON RI.formationID = TM.formationID
+WHERE RI.clubMemberID = 63;
+
+INSERT INTO EnrolledAt (clubMemberID, locationID, startDate) VALUES
+(60, 3, '2025-08-04'),
+(61, 3, '2025-08-04'),
+(62, 3, '2025-08-04'),
+(63, 3, '2025-08-04'),
+(64, 3, '2025-08-04'),
+(65, 3, '2025-08-04'),
+(66, 3, '2025-08-04'),
+(67, 3, '2025-08-04'),
+(68, 3, '2025-08-04'),
+(69, 3, '2025-08-04');
+
 
 
 
@@ -611,6 +678,11 @@ CREATE TABLE HeadCoachOf (
  (21 , 24);
  
 
+
+
+
+
+
 #------------
 
 INSERT INTO ClubMember (
@@ -618,8 +690,11 @@ INSERT INTO ClubMember (
     phoneNumber, address, city, province, postalCode, status
 ) VALUES 
     (996, 'Tina', 'sentiak', '2004-04-11', 165.2, 60.5, '999-68-7667', 'ZZZ799448777', '4501734567', '123 Maine Street', 'Montreal', 'QC', 'H3Z2X3', 'Inactive'),
-    (997, 'Jerimiah', 'Acesus', '2002-04-11', 185.2, 64.5, '991-68-7667', 'ZZZ795548777', '4505634567', '23 Monte Street', 'Montreal', 'QC', 'H7X3G6', 'Inactive');
-
+    (997, 'Jerimiah', 'Acesus', '2002-04-11', 185.2, 64.5, '991-68-7667', 'ZZZ795548777', '4505534567', '23 Monte Street', 'Montreal', 'QC', 'H7X3G6', 'Inactive'),
+  (998, 'Jim', 'Carter', '2003-06-12', 165.2, 60.5, '959-68-7667', 'ZZZ899448777', '4501634567', '123 Mainer Street', 'Montreal', 'QC', 'H4Z2X3', 'Inactive'),
+    (999, 'Tom', 'Jerry', '2005-08-09', 185.2, 64.5, '981-68-7667', 'ZZ7795548777', '4505734567', '23 Monter Street', 'Montreal', 'QC', 'H5X3G6', 'Inactive'),
+    (1002, 'Bob', 'rosi', '2001-03-06', 165.2, 60.5, '979-68-7667', 'Z6Z799448777', '4531734567', '123 Maineo Street', 'Montreal', 'QC', 'H6Z2X3', 'Inactive'),
+    (1003, 'tim', 'bur', '2002-05-03', 185.2, 64.5, '961-68-7667', 'Z3Z795548777', '4501634567', '23 Monteo Street', 'Montreal', 'QC', 'H8X3G6', 'Inactive');
 
 
 
@@ -628,9 +703,16 @@ INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate) VALUES
   (996, 1, '2020-01-01', '2022-12-31'),
   (996, 2, '2023-01-01', NULL),
   (997, 3, '2021-03-01', '2021-12-31'),
-  (997, 4, '2022-02-01', NULL);
-	
-
+  (997, 4, '2022-02-01', NULL),
+  (998, 1, '2020-01-01', '2020-12-31'),
+  (998, 2, '2023-01-01', NULL),
+  (999, 3, '2018-03-01', '2020-11-30'),
+  (999, 4, '2022-03-01', NULL),
+(1002, 3, '2021-03-01', '2021-07-31'),
+  (1002, 4, '2022-04-01', NULL),
+  (1003, 3, '2020-03-01', '2021-12-31'),
+  (1003, 4, '2022-04-01', NULL);
+  
 SELECT
     cm.clubMemberID,
     cm.status,

@@ -6,7 +6,6 @@ the club member’s membership number, first name, last name, age, phone number,
 email and current location name. The results should be displayed sorted in ascending
 order by location name then by club membership number. -->
 
-
 <?php
 include 'db.php';
 ?>
@@ -14,10 +13,24 @@ include 'db.php';
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Middle Blocker-Only Assigned Club Members</title>
+    <title>Setter-Only Assigned Club Members</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 85%;
+        }
+        th, td {
+            border: 1px solid #888;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #ccc;
+        }
+    </style>
 </head>
 <body>
-<h2>Active Club Members Assigned Only as Middle Blockers</h2>
+<h2>Active Club Members Assigned Only as Setters</h2>
 
 <?php
 $sql = "
@@ -30,7 +43,16 @@ $sql = "
         CM.email,
         L.name AS locationName
     FROM ClubMember CM
-    JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
+    JOIN (
+        SELECT EA1.*
+        FROM EnrolledAt EA1
+        INNER JOIN (
+            SELECT clubMemberID, MAX(startDate) AS latestStart
+            FROM EnrolledAt
+            GROUP BY clubMemberID
+        ) EA2
+        ON EA1.clubMemberID = EA2.clubMemberID AND EA1.startDate = EA2.latestStart
+    ) EA ON CM.clubMemberID = EA.clubMemberID
     JOIN Location L ON EA.locationID = L.locationID
     WHERE CM.status = 'Active'
       AND CM.clubMemberID IN (
@@ -39,15 +61,15 @@ $sql = "
           GROUP BY clubMemberID
           HAVING 
             COUNT(*) > 0 AND
-            COUNT(CASE WHEN role = 'middle blocker' THEN 1 END) = COUNT(*)
+            COUNT(CASE WHEN role = 'setter' THEN 1 END) = COUNT(*)
       )
-    ORDER BY L.name ASC, CM.clubMemberID ASC;
+    ORDER BY locationName ASC, CM.clubMemberID ASC;
 ";
 
 $result = $conn->query($sql);
 
 if ($result && $result->num_rows > 0) {
-    echo "<table border='1' cellpadding='8'>
+    echo "<table>
             <tr>
                 <th>Membership #</th>
                 <th>First Name</th>
@@ -70,7 +92,7 @@ if ($result && $result->num_rows > 0) {
     }
     echo "</table>";
 } else {
-    echo "<p>No club members found who have only been assigned as middle blockers.</p>";
+    echo "<p>No club members found who have only been assigned as setters.</p>";
 }
 
 $conn->close();
