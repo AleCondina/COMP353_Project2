@@ -40,9 +40,9 @@ if (!empty($startDate) && !empty($endDate)) {
     $sql = "
         SELECT 
             L.name,
-            COUNT(CASE WHEN TF.sessionType = 'Training' THEN 1 END) AS totalTrainings,
+            COUNT(DISTINCT CASE WHEN TF.sessionType = 'Training' THEN TF.formationID END) AS totalTrainings,
             COUNT(DISTINCT CASE WHEN TF.sessionType = 'Training' THEN FP.ClubMemberID END) AS trainingPlayers,
-            COUNT(CASE WHEN TF.sessionType = 'Game' THEN 1 END) AS totalGames,
+            COUNT(DISTINCT CASE WHEN TF.sessionType = 'Game' THEN TF.formationID END) AS totalGames,
             COUNT(DISTINCT CASE WHEN TF.sessionType = 'Game' THEN FP.ClubMemberID END) AS gamePlayers
         FROM TeamMatchUp TF
         JOIN Location L ON TF.locationID = L.locationID
