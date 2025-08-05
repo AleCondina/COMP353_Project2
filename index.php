@@ -11,7 +11,7 @@
         <li><a href="familyMember.php">Manage Family Members</a></li>
         <li><a href="clubMember.php">Manage Club Members</a></li>
         <li><a href="teams.php">Manage Teams</a></li>
-        <li><a href="TeamFormation.php">Manage Team Formations</a></li>
+        <li><a href="TeamMatchUp.php">Manage Team Formations</a></li>
         <li><a href="formation_players.php">Assign Club Members to Teams</a></li>
         <li><a href="MakesPayment.php">Make a Payment</a></li>
         <li><a href="Q8.php">Q8. Location Details</a></li>

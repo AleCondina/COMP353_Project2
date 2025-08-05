@@ -9,6 +9,13 @@ name  VARCHAR(255),
 gender VARCHAR(255)
 );
 
+CREATE TABLE InTeam(
+	clubMemberID INT UNIQUE PRIMARY KEY,
+    teamID INT,
+    FOREIGN KEY(clubMemberID) REFERENCES ClubMember(clubMemberID),
+    FOREIGN KEY(teamID) REFERENCES Team(teamID)
+);
+
 
 CREATE TABLE PostalInfo(
 PostalCode VARCHAR(10) PRIMARY KEY, 
@@ -37,13 +44,13 @@ CREATE TABLE TeamMatchUp (
 
 CREATE TABLE RoleIn (
     clubMemberID INT,
-    teamID INT NOT NULL,
-    role ENUM('setter', 'outside hitter', 'opposite hitter', 'libero', 'Head Coach', 'middle blocker', 'defensive specialist') NOT NULL,
+    formationID INT NOT NULL,
+    role ENUM('setter', 'outside hitter', 'opposite hitter', 'libero', 'middle blocker', 'defensive specialist') NOT NULL,
     PRIMARY KEY (clubMemberID),
     FOREIGN KEY (clubMemberID) REFERENCES ClubMember(clubMemberID),
-    FOREIGN KEY (teamID) REFERENCES Team(teamID)
-    
+    FOREIGN KEY (formationID) REFERENCES TeamMatchUp(formationID)
 );
+
 
 
 CREATE TABLE Location (
@@ -174,6 +181,9 @@ CREATE TABLE EnrolledAt (
     FOREIGN KEY (clubMemberID) REFERENCES ClubMember(clubMemberID),
     FOREIGN KEY (locationID) REFERENCES Location(locationID)
 );
+
+
+
 
 
 INSERT INTO Location (name, type, address, city, province, postalCode, webAddress, maxCapacity) VALUES
@@ -544,80 +554,259 @@ WHERE FormationID = 1;
 
 
 ###########################################################################################
-                                ##QUERY SECTION##        
+                                ##TRIGGER SECTION##        
 ###########################################################################################   
 
 
- ##i)
+-- TODO: test this CHECK PERSONNEL HEAD COACH ELIGIBILITY
+DELIMITER $$
+-- RelatedToRoleIn
+CREATE TRIGGER check_head_coach_role
+BEFORE INSERT ON HeadCoachOf
+FOR EACH ROW
+BEGIN
+  DECLARE p_role VARCHAR(50);
 
-SELECT
-    L.locationID,
-    L.name AS locationName,
-    L.address,
-    L.city,
-    L.province,
-    L.postalCode,
-    GROUP_CONCAT(DISTINCT LC.number SEPARATOR ', ') AS phoneNumbers,
-    L.webAddress,
-    L.type,
-    L.maxCapacity,
-    
-    -- General manager full name
-    CONCAT(P.firstName, ' ', P.lastName) AS generalManager,
+  -- Get the role of the personnel being inserted
+  SELECT role INTO p_role
+  FROM Personnel
+  WHERE personnelID = NEW.personnelID;
 
-    -- Count personnel
-    (SELECT COUNT(*) 
-     FROM WorksAt W 
-     WHERE W.locationID = L.locationID) AS numberOfPersonnel,
+  -- Check role validity
+  IF p_role NOT IN ('Coach', 'Head Coach') THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Personnel must be a Coach or Head Coach to be assigned as head coach.';
+  END IF;
+END $$
 
-    -- Count club members
-    (SELECT COUNT(*) 
-     FROM EnrolledAt E 
-     WHERE E.locationID = L.locationID) AS numberOfClubMembers
-
-FROM Location L
-LEFT JOIN LocationCalledAt LC ON L.locationID = LC.locationID
-
--- Join to get general manager (from Personnel)
-LEFT JOIN WorksAt WGM ON L.locationID = WGM.locationID
-LEFT JOIN Personnel P ON P.personnelID = WGM.personnelID AND P.role = 'General Manager'
-
-GROUP BY L.locationID
-ORDER BY numberOfClubMembers DESC;
+DELIMITER ;
 
 
+#Enforce Gender and Location Consistency Within Team
 
- ##ii)
-SELECT 
-    EL.name AS clubLocationName,
-    CM.clubMemberID,
-    CM.firstName,
-    CM.lastName,
-    TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) AS age,
-    CM.city,
-    CM.province,
-    CM.status,
-    WL.name AS workLocationName
 
-FROM ClubMember CM
+DELIMITER $$
 
--- Join EnrolledAt to get the location they're enrolled in
-JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
-JOIN Location EL ON EA.locationID = EL.locationID
+CREATE PROCEDURE AssignClubMemberToFormation(
+    IN p_formationID INT,
+    IN p_clubMemberID INT,
+    IN p_teamID INT,
+    IN p_role VARCHAR(50)
+)
+BEGIN
+    DECLARE team1 INT;
+    DECLARE team2 INT;
+    DECLARE cmGender ENUM('Male', 'Female');
+    DECLARE teamGender ENUM('Male', 'Female');
+    DECLARE cmLoc INT;
+    DECLARE teamLoc INT;
 
--- Join with Personnel using shared SSN (assumes that's the common field)
-JOIN Personnel P ON CM.SSN = P.SSN
+    -- Validate: team must be part of formation
+    SELECT team1ID, team2ID INTO team1, team2
+    FROM TeamMatchUp
+    WHERE formationID = p_formationID;
 
--- Join WorksAt to get current work location
-JOIN WorksAt WA ON P.personnelID = WA.personnelID
-    AND (WA.endDate IS NULL OR WA.endDate > CURDATE()) -- Only current jobs
+    IF p_teamID NOT IN (team1, team2) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Team is not part of formation';
+    END IF;
 
-JOIN Location WL ON WA.locationID = WL.locationID
+    -- Validate: gender match
+    SELECT gender INTO cmGender FROM ClubMember WHERE clubMemberID = p_clubMemberID;
+    SELECT gender INTO teamGender FROM Team WHERE teamID = p_teamID;
 
--- Filter for majors only
-WHERE TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) > 18
+    IF cmGender <> teamGender THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Gender mismatch between the member and team';
+    END IF;
 
-ORDER BY WL.name ASC, age ASC;
+    -- Validate: location match
+    SELECT locationID INTO cmLoc FROM EnrolledAt WHERE clubMemberID = p_clubMemberID AND endDate IS NULL;
+    SELECT locationID INTO teamLoc FROM TeamLocated WHERE teamID = p_teamID;
+
+    IF cmLoc <> teamLoc THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Location mismatch between the member and team';
+    END IF;
+
+    -- Insert into InTeam if not already there
+    INSERT IGNORE INTO InTeam (clubMemberID, teamID) VALUES (p_clubMemberID, p_teamID);
+
+    -- Insert into RoleIn
+    INSERT INTO RoleIn (formationID, clubMemberID, role) VALUES (p_formationID, p_clubMemberID, p_role);
+
+END$$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+CREATE TRIGGER trg_check_team_gender
+BEFORE INSERT ON TeamMatchUp
+FOR EACH ROW
+BEGIN
+    DECLARE gender1 ENUM('Male', 'Female');
+    DECLARE gender2 ENUM('Male', 'Female');
+
+    -- Get gender of both teams
+    SELECT gender INTO gender1 FROM Team WHERE teamID = NEW.team1ID;
+    SELECT gender INTO gender2 FROM Team WHERE teamID = NEW.team2ID;
+
+    -- Compare genders
+    IF gender1 <> gender2 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Both teams in a formation must be of the same gender.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+CREATE TRIGGER trg_check_team_gender_update
+BEFORE UPDATE ON TeamMatchUp
+FOR EACH ROW
+BEGIN
+    DECLARE gender1 ENUM('Male', 'Female');
+    DECLARE gender2 ENUM('Male', 'Female');
+
+    -- Get gender of both teams
+    SELECT gender INTO gender1 FROM Team WHERE teamID = NEW.team1ID;
+    SELECT gender INTO gender2 FROM Team WHERE teamID = NEW.team2ID;
+
+    -- Compare genders
+    IF gender1 <> gender2 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Both teams in a formation must be of the same gender.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+
+
+
+
+-- dont need ?
+-- DELIMITER $$
+
+-- CREATE TRIGGER trg_insert_inteam_after_formation
+-- AFTER INSERT ON RoleIn
+-- FOR EACH ROW
+-- BEGIN
+--     -- Check if player is already in the team
+--     IF NOT EXISTS (
+--         SELECT 1 FROM InTeam
+--         WHERE clubMemberID = NEW.clubMemberID AND teamID = NEW.teamID
+--     ) THEN
+--         INSERT INTO InTeam (clubMemberID, teamID)
+--         VALUES (NEW.clubMemberID, NEW.teamID);
+--     END IF;
+-- END$$
+
+-- DELIMITER ;
+
+
+ -- doesnt work now might need 
+-- DELIMITER $$
+
+-- CREATE TRIGGER trg_delete_inteam_after_formation
+-- AFTER DELETE ON FormationPlayers
+-- FOR EACH ROW
+-- BEGIN
+--     -- Check if the member is still part of any other formation in the same team
+--     IF NOT EXISTS (
+--         SELECT 1 FROM FormationPlayers
+--         WHERE clubMemberID = OLD.clubMemberID AND teamID = OLD.teamID
+--     ) THEN
+--         DELETE FROM InTeam
+--         WHERE clubMemberID = OLD.clubMemberID AND teamID = OLD.teamID;
+--     END IF;
+-- END$$
+
+-- DELIMITER ;
+
+
+
+#Prevent Overlapping Formations (Minimum 3 Hours Apart)
+
+DELIMITER $$
+CREATE TRIGGER trg_check_schedule_conflict
+BEFORE INSERT ON RoleIn
+FOR EACH ROW
+BEGIN
+    DECLARE newDate DATE;
+    DECLARE newStart TIME;
+
+    SELECT date, startTime INTO newDate, newStart
+    FROM TeamMatchUp
+    WHERE formationID = NEW.formationID;
+
+    IF EXISTS (
+        SELECT 1
+        FROM RoleIn fp
+        JOIN TeamFormation tf ON tf.formationID = fp.formationID
+        WHERE fp.clubMemberID = NEW.clubMemberID
+        AND tf.date = newDate
+        AND ABS(TIMESTAMPDIFF(MINUTE, tf.startTime, newStart)) < 180
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Player is already in another formation within 3 hours.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+
+
+#Triggers active club members if sufficient payment is made
+ DELIMITER $$
+
+CREATE TRIGGER check_membership_payment
+AFTER INSERT ON MakesPayment
+FOR EACH ROW
+BEGIN
+    DECLARE memberDOB DATE;
+    DECLARE paymentYear INT;
+    DECLARE age INT;
+    DECLARE totalPaid DECIMAL(10,2);
+
+    -- Get the member's DOB
+    SELECT dateOfBirth INTO memberDOB
+    FROM ClubMember
+    WHERE clubMemberID = NEW.clubMemberID;
+
+    -- Get the payment year
+    SELECT forYear INTO paymentYear
+    FROM Payment
+    WHERE paymentID = NEW.paymentID;
+
+    -- Calculate age as of Jan 1st of that year
+    SET age = TIMESTAMPDIFF(YEAR, memberDOB, STR_TO_DATE(CONCAT(paymentYear, '-01-01'), '%Y-%m-%d'));
+
+    -- Sum all payments made by this member for that year
+    SELECT SUM(P.amount) INTO totalPaid
+    FROM MakesPayment MP
+    JOIN Payment P ON MP.paymentID = P.paymentID
+    WHERE MP.clubMemberID = NEW.clubMemberID
+      AND P.forYear = paymentYear;
+
+    -- Activate the member if payment threshold is met
+    IF (age < 18 AND totalPaid >= 100) OR (age >= 18 AND totalPaid >= 200) THEN
+        UPDATE ClubMember
+        SET status = 'Active'
+        WHERE clubMemberID = NEW.clubMemberID;
+    END IF;
+
+END$$
+
+DELIMITER ;
+
+
+
+
+
+
 
 
 

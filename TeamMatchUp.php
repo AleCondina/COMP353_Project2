@@ -3,7 +3,7 @@ include 'db.php';
 
 // Handle Add
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
-    $stmt = $conn->prepare("INSERT INTO TeamFormation (team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO TeamMatchUp (team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("iiisssii",
         $_POST['team1ID'],
         $_POST['team2ID'],
@@ -16,17 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
     );
     $stmt->execute();
     $stmt->close();
-    header("Location: teamformation.php");
+    header("Location: TeamMatchUp.php");
     exit;
 }
 
 // Handle Delete
 if (isset($_GET['delete'])) {
-    $stmt = $conn->prepare("DELETE FROM TeamFormation WHERE formationID = ?");
+    $stmt = $conn->prepare("DELETE FROM TeamMatchUp WHERE formationID = ?");
     $stmt->bind_param("i", $_GET['delete']);
     $stmt->execute();
     $stmt->close();
-    header("Location: teamformation.php");
+    header("Location: TeamMatchUp.php");
     exit;
 }
 
@@ -38,7 +38,7 @@ $locations = $conn->query("SELECT locationID, name, address FROM Location");
 
 // Fetch formations
 $formations = $conn->query("SELECT tf.*, t1.name AS team1Name, t2.name AS team2Name, l.name AS locationName, l.address AS locationAddress
-                            FROM TeamFormation tf
+                            FROM TeamMatchUp tf
                             JOIN Team t1 ON tf.team1ID = t1.teamID
                             JOIN Team t2 ON tf.team2ID = t2.teamID
                             JOIN Location l ON tf.locationID = l.locationID");
@@ -128,7 +128,7 @@ $formations = $conn->query("SELECT tf.*, t1.name AS team1Name, t2.name AS team2N
         <td><?= htmlspecialchars($row['locationName']) ?></td>
         <td><?= htmlspecialchars($row['locationAddress']) ?></td>
         <td>
-            <a href="teamformation_edit.php?id=<?= $row['formationID'] ?>">Edit</a> |
+            <a href="TeamMatchUp_edit.php?id=<?= $row['formationID'] ?>">Edit</a> |
             <a href="?delete=<?= $row['formationID'] ?>" onclick="return confirm('Delete this formation?')">Delete</a>
         </td>
     </tr>

@@ -10,7 +10,7 @@ $formations = $conn->query("
         ta.gender AS genderA,
         tb.name AS teamBName, 
         tb.gender AS genderB
-    FROM TeamFormation tf
+    FROM TeamMatchUp tf
     JOIN Team ta ON tf.team1ID = ta.teamID
     JOIN Team tb ON tf.team2ID = tb.teamID
     ORDER BY tf.date DESC, tf.startTime DESC
@@ -38,19 +38,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Check for conflicts
     $conflictCheck = $conn->prepare("
-        SELECT 1 FROM FormationPlayers fp 
-        JOIN TeamFormation tf ON fp.formationID = tf.formationID
-        WHERE fp.clubMemberID = ? AND tf.date = (
-            SELECT date FROM TeamFormation WHERE formationID = ?
-        ) AND ABS(TIMESTAMPDIFF(HOUR, tf.startTime, (SELECT startTime FROM TeamFormation WHERE formationID = ?))) < 3
+        SELECT 1 FROM RoleIn ri 
+        JOIN TeamMatchUp tf ON ri.formationID = tf.formationID
+        WHERE ri.clubMemberID = ? AND tf.date = (
+            SELECT date FROM TeamMatchUp WHERE formationID = ?
+        ) AND ABS(TIMESTAMPDIFF(HOUR, tf.startTime, (SELECT startTime FROM TeamMatchUp WHERE formationID = ?))) < 3
     ");
     $conflictCheck->bind_param("iii", $clubMemberID, $formationID, $formationID);
     $conflictCheck->execute();
     $conflictResult = $conflictCheck->get_result();
 
     if ($conflictResult->num_rows === 0) {
-        $stmt = $conn->prepare("INSERT INTO FormationPlayers (formationID, teamID, clubMemberID, role) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("iiis", $formationID, $teamID, $clubMemberID, $role);
+        $stmt = $conn->prepare("CALL AssignClubMemberToFormation(?, ?, ?, ?)");
+        $stmt->bind_param("iiis", $formationID, $clubMemberID, $teamID, $role);
         $stmt->execute();
         $stmt->close();
         echo "<p style='color:green;'>Club member assigned successfully.</p>";
@@ -97,11 +97,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <label for="role">Role:</label>
     <select name="role" required>
         <option value="">Select Role</option>
-        <option value="Goalkeeper">Goalkeeper</option>
-        <option value="Defender">Defender</option>
-        <option value="Midfielder">Midfielder</option>
-        <option value="Forward">Forward</option>
-        <option value="Head Coach">Head Coach</option>
+        <option value="setter">Setter</option>
+        <option value="outside hitter">Outside Hitter</option>
+        <option value="opposite hitter">Opposite Hitter</option>
+        <option value="libero">Libero</option>
+        <option value="middle blocker">Middle Blocker</option>
+        <option value="defensive specialist">Defensive Specialist</option>
     </select><br><br>
 
     <button type="submit">Assign</button>
