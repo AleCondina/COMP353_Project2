@@ -512,24 +512,82 @@ INSERT INTO Team (teamID, name, gender) VALUES
 (25, 'boys1', 'Male'),
 (26, 'boys2', 'Male');
 
-#Q10 requirements
 
-INSERT INTO RoleIn (clubMemberID, teamID, role) VALUES
+
+
+
+SELECT * FROM ClubMember;
+
+INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES
+(1, 3, 4, 3, '2025-08-04', '17:00:00', 'Game', 18, 24),
+(2, 9, 21, 3, '2025-07-02', '15:00:00', 'Game', 18, 24),
+(3, 9, 21, 3, '2025-08-04', '13:00:00', 'Training', 18, 19),
+(4, 9, 21, 3, '2025-10-06', '19:00:00', 'Training', 17, 12),
+(5, 9, 21, 3, '2025-10-05', '17:00:00', 'Game', 10, 10),
+(6, 9, 21, 3, '2025-11-12', '15:00:00', 'Game', 19, 12);
+
+
+
+
+SELECT * FROM InTeam;
+
+
+INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
+(60, 2, 'outside hitter'),
+(61, 2, 'setter'),
+(62, 2, 'middle blocker'),
+(63, 2, 'libero'),
+(64, 2, 'opposite hitter'),
+(65, 2, 'outside hitter'),
+(66, 2, 'setter'),
+(67, 2, 'middle blocker'),
+(68, 2, 'libero'),
+(69, 2, 'opposite hitter'),
+
 (60, 3, 'outside hitter'),
 (61, 3, 'setter'),
 (62, 3, 'middle blocker'),
 (63, 3, 'libero'),
 (64, 3, 'opposite hitter'),
+(65, 3, 'outside hitter'),
+(66, 3, 'setter'),
+(67, 3, 'middle blocker'),
+(68, 3, 'libero'),
+(69, 3, 'opposite hitter'),
+
+(60, 4, 'outside hitter'),
+(61, 4, 'setter'),
+(62, 4, 'middle blocker'),
+(63, 4, 'libero'),
+(64, 4, 'opposite hitter'),
 (65, 4, 'outside hitter'),
 (66, 4, 'setter'),
 (67, 4, 'middle blocker'),
 (68, 4, 'libero'),
-(69, 4, 'opposite hitter');
+(69, 4, 'opposite hitter'),
 
-SELECT * FROM ClubMember;
+(60, 5, 'outside hitter'),
+(61, 5, 'setter'),
+(62, 5, 'middle blocker'),
+(63, 5, 'libero'),
+(64, 5, 'opposite hitter'),
+(65, 5, 'outside hitter'),
+(66, 5, 'setter'),
+(67, 5, 'middle blocker'),
+(68, 5, 'libero'),
+(69, 5, 'opposite hitter'),
 
-INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startTime, sessionType, team1Score, team2Score) VALUES
-(1, 3, 4, 3, '2025-08-04', '17:00:00', 'Game', 18, 24);
+
+(60, 6, 'outside hitter'),
+(61, 6, 'setter'),
+(62, 6, 'middle blocker'),
+(63, 6, 'libero'),
+(64, 6, 'opposite hitter'),
+(65, 6, 'outside hitter'),
+(66, 6, 'setter'),
+(67, 6, 'middle blocker'),
+(68, 6, 'libero'),
+(69, 6, 'opposite hitter');
 
 
 
@@ -548,8 +606,9 @@ CREATE TABLE HeadCoachOf (
 
  INSERT INTO HeadCoachOf (teamID,personnelID) VALUES
  (3 , 23),
- (4 , 24);
- 
+ (4 , 24),
+ (9 , 23),
+ (21 , 24);
  
 
 #------------
