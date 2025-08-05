@@ -50,7 +50,9 @@ CREATE TABLE RoleIn (
     FOREIGN KEY (formationID) REFERENCES TeamMatchUp(formationID)
 );
  
-
+ 
+ Select * from FamilyMember fm JOIN ClubMember cm on cm.SSN = fm.SSN;
+ 
 
 CREATE TABLE Location (
     locationID INT AUTO_INCREMENT PRIMARY KEY,
@@ -280,6 +282,31 @@ INSERT INTO FamilyMember (SSN, firstName, lastName, dateOfBirth, medicareNumber,
 ('222-33-6608', 'Andrew', 'Wilson', '1982-06-03', 'FMCR54321008', '438-555-2208', '308 Family St', 'Montreal', 'QC', 'H4X 8F8', 'andrew.wilson@email.com'),
 ('222-33-6609', 'Karen', 'Anderson', '1983-07-23', 'FMCR54321009', '438-555-2209', '309 Family St', 'Montreal', 'QC', 'H4X 9F9', 'karen.anderson@email.com');
 
+
+
+-- todo:
+INSERT INTO FamilyMember 
+(SSN, firstName, lastName, dateOfBirth, medicareNumber, phoneNumber, address, city, province, postalCode, email)
+VALUES 
+('111-11-1111', 'Alice', 'Smith', '1980-05-15', 'MC123456789', '514-111-1111', '123 Maple St', 'Montreal', 'QC', 'H1A1A1', 'alice@example.com'),
+('222-22-2222', 'Bob', 'Jones', '1975-08-10', 'MC223456789', '514-222-2222', '456 Oak St', 'Montreal', 'QC', 'H1A1A2', 'bob@example.com'),
+('333-33-3333', 'Carol', 'White', '1982-03-20', 'MC323456789', '514-333-3333', '789 Pine St', 'Montreal', 'QC', 'H1A1A3', 'carol@example.com'),
+('444-44-4444', 'David', 'Brown', '1990-07-05', 'MC423456789', '514-444-4444', '321 Birch St', 'Montreal', 'QC', 'H1A1A4', 'david@example.com'),
+('555-55-5555', 'Eva', 'Green', '1985-12-01', 'MC523456789', '514-555-5555', '654 Cedar St', 'Montreal', 'QC', 'H1A1A5', 'eva@example.com');
+
+INSERT INTO ClubMember 
+(SSN, firstName, lastName, dateOfBirth, medicareNumber, phoneNumber, address, city, province, postalCode, email, status, gender)
+VALUES
+('111-11-1111', 'Alice', 'Smith', '1980-05-15', 'MC123456789', '514-111-1111', '123 Maple St', 'Montreal', 'QC', 'H1A1A1', 'alice@example.com', 'Active', 'Female'),
+('222-22-2222', 'Bob', 'Jones', '1975-08-10', 'MC223456789', '514-222-2222', '456 Oak St', 'Montreal', 'QC', 'H1A1A2', 'bob@example.com', 'Active', 'Male'),
+('333-33-3333', 'Carol', 'White', '1982-03-20', 'MC323456789', '514-333-3333', '789 Pine St', 'Montreal', 'QC', 'H1A1A3', 'carol@example.com', 'Active', 'Female'),
+('444-44-4444', 'David', 'Brown', '1990-07-05', 'MC423456789', '514-444-4444', '321 Birch St', 'Montreal', 'QC', 'H1A1A4', 'david@example.com', 'Active', 'Male'),
+('555-55-5555', 'Eva', 'Green', '1985-12-01', 'MC523456789', '514-555-5555', '654 Cedar St', 'Montreal', 'QC', 'H1A1A5', 'eva@example.com', 'Active', 'Female');
+
+INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate)
+SELECT clubMemberID, 1, '2025-08-04', NULL
+FROM ClubMember
+WHERE SSN IN ('111-11-1111', '222-22-2222', '333-33-3333', '444-44-4444', '555-55-5555');
 
 
 
@@ -581,18 +608,17 @@ FROM
     ClubMember cm
 JOIN
     EnrolledAt ea ON cm.clubMemberID = ea.clubMemberID
+WHERE status ='Active'
 GROUP BY
     cm.clubMemberID, cm.status, cm.dateOfBirth
 ORDER BY
-    cm.clubMemberID;
+    ageAtFirstEnrollment ASC, currentAge DESC;
 
--- cmIDS to be 
-UPDATE EnrolledAt 
-Set startDate = '2024-09-01' where clubMemberID = 2;
-
-select * from EnrolledAt where clubMemberID =2;
-
-
+INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate) VALUES 
+  (9877, 3, '2016-01-01', '2022-12-31'),
+  (9877, 5, '2023-04-02', NULL),
+  (9879, 2, '2013-03-01', '2021-12-31'),
+  (9879, 6, '2022-02-01', NULL);
 
 
 -- 3. Insert a payment made 2+ years ago (e.g., paymentID 5001)
