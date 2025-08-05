@@ -10,12 +10,12 @@ $id = $_GET['id'];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt = $conn->prepare("UPDATE ClubMember SET 
-        firstName = ?, lastName = ?, dateOfBirth = ?, height = ?, weight = ?, SSN = ?, medicareNumber = ?, phoneNumber = ?, 
-        address = ?, city = ?, province = ?, postalCode = ?, status = ?, gender = ?
+        firstName = ?, lastName = ?, dateOfBirth = ?, height = ?, weight = ?, SSN = ?, medicareNumber = ?, phoneNumber = ?,
+        email = ?, address = ?, city = ?, province = ?, postalCode = ?, status = ?, gender = ?
         WHERE clubMemberID = ?");
 
     $stmt->bind_param(
-         "sssddsssssssssi",
+         "sssddssssssssssi",
         $_POST['firstName'],
         $_POST['lastName'],
         $_POST['dateOfBirth'],
@@ -24,6 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $_POST['SSN'],
         $_POST['medicareNumber'],
         $_POST['phoneNumber'],
+        $_POST['email'],
         $_POST['address'],
         $_POST['city'],
         $_POST['province'],
@@ -71,6 +72,7 @@ if (!$member) {
     <input type="text" name="SSN" placeholder="SSN (XXX-XX-XXXX)" maxlength="11" value="<?= htmlspecialchars($member['SSN']) ?>" required>
     <input type="text" name="medicareNumber" placeholder="Medicare Number" maxlength="12" value="<?= htmlspecialchars($member['medicareNumber']) ?>" required>
     <input type="text" name="phoneNumber" placeholder="Phone Number" value="<?= htmlspecialchars($member['phoneNumber']) ?>">
+    <input type="text" name="email" placeholder="Email" value="<?= htmlspecialchars($member['email']?? '') ?>">
     <input type="text" name="address" placeholder="Address" value="<?= htmlspecialchars($member['address']) ?>">
     <input type="text" name="city" placeholder="City" value="<?= htmlspecialchars($member['city']) ?>">
     <input type="text" name="province" placeholder="Province" value="<?= htmlspecialchars($member['province']) ?>">
