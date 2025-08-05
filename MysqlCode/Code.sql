@@ -522,6 +522,8 @@ INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startT
 (8, 9, 21, 3, '2024-06-10', '15:00:00', 'Game', 19, 12),
 (9, 9, 21, 3, '2024-09-11', '12:00:00', 'Game', 12, 12);
 
+SELECT * FROM InTeam
+
 	DELETE FROM RoleIn
 WHERE clubMemberID = 60
   AND formationID = 6;
@@ -655,6 +657,25 @@ INSERT INTO EnrolledAt (clubMemberID, locationID, startDate) VALUES
 (68, 3, '2025-08-04'),
 (69, 3, '2025-08-04');
 
+
+-- Remove existing conflicting entries if any
+DELETE FROM InTeam WHERE clubMemberID BETWEEN 60 AND 69;
+
+-- Team 9: Players 60–64
+INSERT INTO InTeam (clubMemberID, teamID) VALUES
+(60, 9),
+(61, 9),
+(62, 9),
+(63, 9),
+(64, 9);
+
+-- Team 21: Players 65–69
+INSERT INTO InTeam (clubMemberID, teamID) VALUES
+(65, 21),
+(66, 21),
+(67, 21),
+(68, 21),
+(69, 21);
 
 
 
