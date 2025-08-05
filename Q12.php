@@ -44,9 +44,9 @@ if (!empty($startDate) && !empty($endDate)) {
             COUNT(DISTINCT CASE WHEN TF.sessionType = 'Training' THEN FP.ClubMemberID END) AS trainingPlayers,
             COUNT(CASE WHEN TF.sessionType = 'Game' THEN 1 END) AS totalGames,
             COUNT(DISTINCT CASE WHEN TF.sessionType = 'Game' THEN FP.ClubMemberID END) AS gamePlayers
-        FROM TeamFormation TF
+        FROM TeamMatchUp TF
         JOIN Location L ON TF.locationID = L.locationID
-        LEFT JOIN FormationPlayers FP ON TF.formationID = FP.formationID
+        LEFT JOIN RoleIn FP ON TF.formationID = FP.formationID
         WHERE TF.date BETWEEN ? AND ?
         GROUP BY L.locationID
         HAVING totalGames >= 4
