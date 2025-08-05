@@ -20,21 +20,42 @@ include 'db.php';
 
 <?php
 $sql = "
+    WITH CurrentLocation AS (
     SELECT 
+        EA.clubMemberID,
+        L.name AS locationName
+    FROM EnrolledAt EA
+    JOIN Location L ON EA.locationID = L.locationID
+    WHERE EA.endDate IS NULL
+),
+
+FirstEnrollment AS (
+    SELECT 
+        clubMemberID,
+        MIN(startDate) AS dateJoined
+    FROM EnrolledAt
+    GROUP BY clubMemberID
+)
+
+SELECT 
     CM.clubMemberID,
     CM.firstName,
     CM.lastName,
+    FE.dateJoined,
     TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) AS age,
     CM.phoneNumber,
-    L.name AS locationName
-    FROM ClubMember CM
-    JOIN EnrolledAt EA ON CM.clubMemberID = EA.clubMemberID
-    JOIN Location L ON EA.locationID = L.locationID
-    WHERE CM.status = 'Active'
-    AND CM.clubMemberID NOT IN (
-        SELECT DISTINCT clubMemberID FROM RoleIn
-    )
-    ORDER BY L.name ASC, age ASC;
+    CM.email,
+    CL.locationName
+FROM ClubMember CM
+JOIN FirstEnrollment FE ON CM.clubMemberID = FE.clubMemberID
+JOIN CurrentLocation CL ON CM.clubMemberID = CL.clubMemberID
+WHERE 
+    CM.status = 'Active'
+    AND TIMESTAMPDIFF(YEAR, CM.dateOfBirth, FE.dateJoined) < 18
+    AND TIMESTAMPDIFF(YEAR, CM.dateOfBirth, CURDATE()) > 17
+ORDER BY 
+    CL.locationName ASC,
+    age ASC;
 ";
 
 $result = $conn->query($sql);
@@ -45,8 +66,10 @@ if ($result->num_rows > 0) {
                 <th>Membership #</th>
                 <th>First Name</th>
                 <th>Last Name</th>
+                <th>Date Joined</th>
                 <th>Age</th>
-                <th>Phone</th>
+                <th>Phone Number</th>
+                <th>Email</th>
                 <th>Current Location</th>
             </tr>";
     while ($row = $result->fetch_assoc()) {
@@ -54,14 +77,16 @@ if ($result->num_rows > 0) {
                 <td>{$row['clubMemberID']}</td>
                 <td>{$row['firstName']}</td>
                 <td>{$row['lastName']}</td>
+                <td>{$row['dateJoined']}</td>
                 <td>{$row['age']}</td>
                 <td>{$row['phoneNumber']}</td>
+                <td>{$row['email']}</td>
                 <td>{$row['locationName']}</td>
               </tr>";
     }
     echo "</table>";
 } else {
-    echo "<p>No active club members found who have never been assigned to a formation.</p>";
+    echo "<p>No active major club members found who have been enrolled since they were minors.</p>";
 }
 
 $conn->close();
