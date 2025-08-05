@@ -570,6 +570,28 @@ INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate) VALUES
   (996, 2, '2023-01-01', NULL),
   (997, 3, '2021-03-01', '2021-12-31'),
   (997, 4, '2022-02-01', NULL);
+	
+
+SELECT
+    cm.clubMemberID,
+    cm.status,
+    TIMESTAMPDIFF(YEAR, cm.dateOfBirth, CURDATE()) AS currentAge,
+    TIMESTAMPDIFF(YEAR, cm.dateOfBirth, MIN(ea.startDate)) AS ageAtFirstEnrollment
+FROM
+    ClubMember cm
+JOIN
+    EnrolledAt ea ON cm.clubMemberID = ea.clubMemberID
+GROUP BY
+    cm.clubMemberID, cm.status, cm.dateOfBirth
+ORDER BY
+    cm.clubMemberID;
+
+-- cmIDS to be 
+UPDATE EnrolledAt 
+Set startDate = '2024-09-01' where clubMemberID = 2;
+
+select * from EnrolledAt where clubMemberID =2;
+
 
 
 
@@ -592,6 +614,7 @@ select * FROM TeamMatchUp;
 DELETE FROM TeamMatchUp
 WHERE FormationID = 1; 
 
+select * FROM EnrolledAt;
 
 
 
@@ -792,7 +815,7 @@ BEGIN
     IF EXISTS (
         SELECT 1
         FROM RoleIn fp
-        JOIN TeamFormation tf ON tf.formationID = fp.formationID
+        JOIN TeamMatchUp tf ON tf.formationID = fp.formationID
         WHERE fp.clubMemberID = NEW.clubMemberID
         AND tf.date = newDate
         AND ABS(TIMESTAMPDIFF(MINUTE, tf.startTime, newStart)) < 180

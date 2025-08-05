@@ -29,7 +29,7 @@ $sql = "
     JOIN Location L ON EA.locationID = L.locationID
     WHERE CM.status = 'Active'
     AND CM.clubMemberID NOT IN (
-        SELECT DISTINCT clubMemberID FROM FormationPlayers
+        SELECT DISTINCT clubMemberID FROM RoleIn
     )
     ORDER BY L.name ASC, age ASC;
 ";
