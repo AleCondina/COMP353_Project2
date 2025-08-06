@@ -103,6 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <option value="libero">Libero</option>
         <option value="middle blocker">Middle Blocker</option>
         <option value="defensive specialist">Defensive Specialist</option>
+        <option value="head coach">Head Coach</option>
     </select><br><br>
 
     <button type="submit">Assign</button>
