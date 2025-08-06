@@ -49,6 +49,8 @@ CREATE TABLE RoleIn (
     FOREIGN KEY (clubMemberID) REFERENCES ClubMember(clubMemberID),
     FOREIGN KEY (formationID) REFERENCES TeamMatchUp(formationID)
 );
+
+
  
  
  Select * from FamilyMember fm JOIN ClubMember cm on cm.SSN = fm.SSN;
@@ -283,6 +285,8 @@ VALUES
 ('444-44-4444', 'David', 'Brown', '1990-07-05', 'MC423456789', '514-444-4444', '321 Birch St', 'Montreal', 'QC', 'H1A1A4', 'david@example.com'),
 ('555-55-5555', 'Eva', 'Green', '1985-12-01', 'MC523456789', '514-555-5555', '654 Cedar St', 'Montreal', 'QC', 'H1A1A5', 'eva@example.com');
 
+
+-- inserting familyMembers who are coaches and active
 INSERT INTO ClubMember 
 (SSN, firstName, lastName, dateOfBirth, medicareNumber, phoneNumber, address, city, province, postalCode, email, status, gender)
 VALUES
@@ -293,9 +297,17 @@ VALUES
 ('555-55-5555', 'Eva', 'Green', '1985-12-01', 'MC523456789', '514-555-5555', '654 Cedar St', 'Montreal', 'QC', 'H1A1A5', 'eva@example.com', 'Active', 'Female');
 
 INSERT INTO EnrolledAt (clubMemberID, locationID, startDate, endDate)
-SELECT clubMemberID, 1, '2025-08-04', NULL
+SELECT clubMemberID, 3, '2025-01-04', NULL
 FROM ClubMember
 WHERE SSN IN ('111-11-1111', '222-22-2222', '333-33-3333', '444-44-4444', '555-55-5555');
+
+INSERT INTO RoleIn (clubMemberID, formationID, role) VALUES
+('9880', 15 , 'head coach'),
+('9881',15 , 'head coach'),
+    ('9882', 2 , 'head coach'),
+    ('9883', 2 , 'head coach'),
+    ('9884', 3 , 'head coach');
+
 
 
 
@@ -549,8 +561,6 @@ INSERT INTO TeamMatchUp (formationID, team1ID, team2ID, locationID, date, startT
 (8, 9, 21, 3, '2024-06-10', '15:00:00', 'Game', 19, 12),
 (9, 9, 21, 3, '2024-09-11', '12:00:00', 'Game', 12, 12);
 
-SELECT * FROM InTeam
-
 	DELETE FROM RoleIn
 WHERE clubMemberID = 60
   AND formationID = 6;
@@ -684,25 +694,6 @@ INSERT INTO EnrolledAt (clubMemberID, locationID, startDate) VALUES
 (68, 3, '2025-08-04'),
 (69, 3, '2025-08-04');
 
-
--- Remove existing conflicting entries if any
-DELETE FROM InTeam WHERE clubMemberID BETWEEN 60 AND 69;
-
--- Team 9: Players 60–64
-INSERT INTO InTeam (clubMemberID, teamID) VALUES
-(60, 9),
-(61, 9),
-(62, 9),
-(63, 9),
-(64, 9);
-
--- Team 21: Players 65–69
-INSERT INTO InTeam (clubMemberID, teamID) VALUES
-(65, 21),
-(66, 21),
-(67, 21),
-(68, 21),
-(69, 21);
 
 
 
@@ -1061,10 +1052,19 @@ END$$
 DELIMITER ;
 
 
-
-
-
-
-
-
+ /* Family member who is ALSO a club‑member … */
+        SELECT DISTINCT
+               FM.firstName,
+               FM.lastName,
+               FM.phoneNumber
+        FROM   FamilyMember      FM
+        JOIN   ClubMember        CM  ON CM.SSN = FM.SSN          /* same person */
+        JOIN   RoleIn  FP  ON FP.clubMemberID = CM.clubMemberID
+        JOIN   TeamMatchUp     TF  ON TF.formationID  = FP.formationID
+        JOIN   EnrolledAt        EA  ON EA.clubMemberID = CM.clubMemberID
+        WHERE  CM.status = 'Active'
+          AND  EA.endDate is null
+          AND  FP.role   = 'head coach'     /* they coach at least one session   */
+          AND  EA.locationID = 3            /* person is enrolled at location    */
+          AND  TF.locationID = EA.locationID;
 
