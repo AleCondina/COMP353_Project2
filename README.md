@@ -8,6 +8,26 @@ This repository preserves an academic project. It originally connected to a univ
 
 The current code reads database connection settings from environment variables rather than embedding credentials in source files. Historical commits may contain obsolete course configuration.
 
+## Repository contents
+
+- Root PHP files: administration forms, CRUD operations, and reporting queries.
+- [database/schema.sql](database/schema.sql): related schema draft imported from [MVC_database](https://github.com/AleCondina/MVC_database), source blob `26c680308c383b1a6a068b7735a72d6ade77aa69`.
+- `db.php`: shared MySQL connection configured through environment variables.
+
+CRUD means creating, reading, updating, and deleting database records. The reporting pages use SQL joins and filters to retrieve related information, such as team sessions and players for a location and date range.
+
+## Related schema draft
+
+The imported draft defines nine tables: Location, Personnel, ClubMember, FamilyMember, Hobby, Payment, WorksAt, HasHobby, and RelatedTo. Primary keys identify records, unique constraints restrict duplicates, and foreign keys link related tables. Junction tables represent relationships such as members and hobbies.
+
+The import removes a trailing comma in the Payment definition and adds the whitespace required after SQL `--` comment markers. The original table and column design is otherwise preserved. The source repository is unchanged.
+
+**This draft is incomplete for the PHP application.** For example, `teams.php` requires Team, TeamLocated, and InTeam; `Q10.php` also requires TeamFormation and FormationPlayers. These tables are absent from the draft. The ClubMember definition also lacks the `status` and `gender` columns used by `clubMember.php`. This list illustrates known differences; it is not a complete compatibility audit.
+
+The WorksAt composite primary key permits multiple personnel/location/start-date combinations; it does not enforce the draft comment's one-location-per-person intent.
+
+The draft contains table definitions only, with no seed records. No MySQL runtime import or application integration test has been performed for this consolidation.
+
 ## Database configuration
 
 Requirements: PHP with the `mysqli` extension, and a MySQL-compatible database.
@@ -39,6 +59,6 @@ For Apache or PHP-FPM, configure the variables for that service instead. A `.env
 
 ## Reproducing the original application
 
-The original database schema and seed data are not included in this repository. Running the application requires obtaining or recreating a compatible schema by inspecting the SQL queries in the PHP files. Setting the connection variables alone will not recreate the database.
+A related schema draft is now included at `database/schema.sql`, but the final application schema and seed data are still unavailable. Running the full application requires completing and reconciling that draft with the SQL queries in the PHP files. Importing the draft or setting connection variables alone will not make the full application functional.
 
 This is an academic code sample, not a production deployment.
